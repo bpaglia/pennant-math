@@ -2,7 +2,7 @@
 
 Data pipeline, step 1: fetch raw MLB data and validate it.
 
-## Setup
+## Setup (if you can install Python)
 
 1. Create a free account at https://app.balldontlie.io and copy your API key.
 2. Set it in your terminal (never commit it to the repository):
@@ -11,7 +11,7 @@ Data pipeline, step 1: fetch raw MLB data and validate it.
    export BALLDONTLIE_API_KEY=your_key_here
    ```
 
-3. Python 3.9 or newer. There is nothing to install; the scripts use only the standard library.
+3. Python 3.9 or newer. There is nothing to install; the scripts use only the standard library. (On Windows, also run `pip install tzdata`.)
 
 ## Run
 
@@ -28,6 +28,16 @@ python pipeline/fetch.py --seasons 2026        # force-refresh one season
 ```
 
 Output goes to `data/raw/`: `teams.json` and one `games_<season>.json` per season.
+
+## Running without installing Python (GitHub, in the browser)
+
+If you cannot install Python, GitHub can run everything for you:
+
+1. Put this project in a public GitHub repository.
+2. Add your API key as a secret named `BALLDONTLIE_API_KEY` (repository Settings > Secrets and variables > Actions).
+3. Open the Actions tab, choose **Fetch and validate data**, and click **Run workflow**.
+
+The workflow runs the tests, fetches the data, validates it, shows the validation results on the run page, and saves the data files into the repository's `data/` folder. GitHub Actions is free for public repositories.
 
 ## What the validator checks
 
