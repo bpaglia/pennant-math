@@ -11,8 +11,13 @@ Exit code 1 means at least one error, so a scheduled build should stop and
 nothing bad is published.
 
 ERROR: the data is impossible or internally inconsistent.
-WARN:  unusual, but it can happen for real (for example a cancelled game that
-       was never replayed), so compare against official standings.
+WARN:  unusual, but it can happen for real, so compare against official sources.
+INFO:  something expected and already explained (for example a verified
+       cancellation listed in data/known_cancellations.json).
+
+Games where neither side is one of the 30 MLB teams (for example an All-Star
+or exhibition game) get a warning and are excluded from every count. A game
+with exactly one unknown team is an error, because a real team is missing.
 """
 from __future__ import annotations
 
@@ -51,12 +56,21 @@ class Report:
     def __init__(self):
         self.errors = []
         self.warnings = []
+        self.infos = []
 
     def error(self, message: str) -> None:
         self.errors.append(message)
 
     def warn(self, message: str) -> None:
         self.warnings.append(message)
+
+    def info(self, message: str) -> None:
+        self.infos.append(message)
+
+
+def is_league_game(game: dict, team_ids: set) -> bool:
+    """True when both sides are real MLB teams."""
+    return game.get("home_team_id") in team_ids and game.get("away_team_id") in team_ids
 
 
 def check_teams(teams: list, report: Report) -> set:
@@ -104,8 +118,19 @@ def check_games(games: list, team_ids: set, today: date, report: Report) -> None
         if gid is None or game.get("date_et") is None:
             report.error(f"Game missing id or date: {game}")
             continue
-        if home not in team_ids or away not in team_ids:
+
+        home_known, away_known = home in team_ids, away in team_ids
+        if not home_known and not away_known:
+            report.warn(
+                f"Game {gid}: not between two MLB teams (team ids {home} and {away}); "
+                f"dated {game['date_et']}, {game.get('season_type')}, status {state}, "
+                f"score {game.get('away_runs')}-{game.get('home_runs')} (away-home). "
+                "Excluded from standings. Check whether it is an All-Star or exhibition game."
+            )
+            continue
+        if home_known != away_known:
             report.error(f"Game {gid}: unknown team id (home={home}, away={away})")
+            continue
         if home == away:
             report.error(f"Game {gid}: a team is playing itself ({home})")
         if game.get("season_type") not in SEASON_TYPES:
@@ -128,9 +153,12 @@ def check_games(games: list, team_ids: set, today: date, report: Report) -> None
             report.warn(f"Game {gid}: still '{state}' but dated {game['date_et']}; status may be stale")
 
 
-def check_season(season: int, games: list, report: Report) -> None:
-    """Season-level checks on the regular season."""
-    regular = [game for game in games if game.get("season_type") == "regular"]
+def check_season(season: int, games: list, team_ids: set, known: list, report: Report) -> None:
+    """Season-level checks on the regular season (MLB teams only)."""
+    regular = [
+        game for game in games
+        if game.get("season_type") == "regular" and is_league_game(game, team_ids)
+    ]
     if not regular:
         report.warn(f"{season}: no regular-season games found")
         return
@@ -142,14 +170,25 @@ def check_season(season: int, games: list, report: Report) -> None:
         per_team[game["away_team_id"]] += 1
 
     games_per_team = GAMES_PER_TEAM_BY_SEASON.get(season, DEFAULT_GAMES_PER_TEAM)
-    expected_total = TOTAL_GAMES_BY_SEASON.get(season, TEAM_COUNT * games_per_team // 2)
+    base_total = TOTAL_GAMES_BY_SEASON.get(season, TEAM_COUNT * games_per_team // 2)
+
+    # Verified cancellations that were never made up lower what we expect.
+    season_known = [item for item in known if item.get("season") == season]
+    known_per_team = Counter()
+    for item in season_known:
+        for team_id in item.get("teams", []):
+            known_per_team[team_id] += 1
+    expected_total = base_total - len(season_known)
 
     for team_id, count in per_team.items():
-        if count > games_per_team:
-            report.error(f"{season}: team {team_id} has {count} final games, more than {games_per_team}")
+        if count > games_per_team - known_per_team.get(team_id, 0):
+            report.error(
+                f"{season}: team {team_id} has {count} final games, more than the "
+                f"{games_per_team - known_per_team.get(team_id, 0)} expected"
+            )
 
     if len(finals) > expected_total:
-        report.error(f"{season}: {len(finals)} final games, more than the {expected_total} possible")
+        report.error(f"{season}: {len(finals)} final games, more than the {expected_total} expected")
 
     season_complete = not any(game.get("status_state") in OPEN_STATES for game in regular)
     if season_complete:
@@ -159,9 +198,17 @@ def check_season(season: int, games: list, report: Report) -> None:
                 f"(expected {expected_total}); some games may be missing or were cancelled. "
                 "Compare against official standings."
             )
-        short = sorted(team_id for team_id, count in per_team.items() if count < games_per_team)
+        short = sorted(
+            team_id for team_id in team_ids
+            if per_team.get(team_id, 0) < games_per_team - known_per_team.get(team_id, 0)
+        )
         if short:
-            report.warn(f"{season}: {len(short)} teams have fewer than {games_per_team} games: {short}")
+            report.warn(f"{season}: {len(short)} teams have fewer games than expected: {short}")
+        for item in season_known:
+            report.info(
+                f"{season}: accounted for a known cancellation on {item.get('date')} "
+                f"(teams {item.get('teams')}): {item.get('note', '')}"
+            )
 
     if len(finals) >= MIN_GAMES_FOR_AVERAGE_CHECK:
         total_runs = sum(game["home_runs"] + game["away_runs"] for game in finals)
@@ -190,19 +237,34 @@ def load_raw(raw_dir: Path):
     return teams, games_by_season
 
 
-def validate(teams: list, games_by_season: dict, today: date) -> Report:
+def load_known_cancellations(path: Path) -> list:
+    """Read verified never-made-up cancellations. Missing file means none."""
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return payload.get("cancellations", [])
+
+
+def validate(teams: list, games_by_season: dict, today: date, known: list = None) -> Report:
     report = Report()
+    known = known or []
     team_ids = check_teams(teams, report)
     all_games = [game for games in games_by_season.values() for game in games]
     check_games(all_games, team_ids, today, report)
     for season in sorted(games_by_season):
-        check_season(season, games_by_season[season], report)
+        check_season(season, games_by_season[season], team_ids, known, report)
     return report
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--raw", type=Path, default=Path("data/raw"))
+    parser.add_argument(
+        "--known",
+        type=Path,
+        default=None,
+        help="Verified cancellations file (default: known_cancellations.json next to the raw folder).",
+    )
     parser.add_argument("--strict", action="store_true", help="Treat warnings as failures.")
     args = parser.parse_args(argv)
 
@@ -212,9 +274,14 @@ def main(argv=None) -> int:
         print(err, file=sys.stderr)
         return 2
 
-    today = datetime.now(timezone.utc).date()
-    report = validate(teams, games_by_season, today)
+    known_path = args.known or args.raw.parent / "known_cancellations.json"
+    known = load_known_cancellations(known_path)
 
+    today = datetime.now(timezone.utc).date()
+    report = validate(teams, games_by_season, today, known)
+
+    for message in report.infos:
+        print(f"INFO   {message}")
     for message in report.warnings:
         print(f"WARN   {message}")
     for message in report.errors:
