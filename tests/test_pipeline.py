@@ -279,11 +279,11 @@ class FetchClientTest(MockServerTestCase):
 TODAY = date(2025, 12, 1)
 
 
-def run_validate(teams, games, today=TODAY):
+def run_validate(teams, games, today=TODAY, known=None):
     by_season = {}
     for game in games:
         by_season.setdefault(game["season"], []).append(game)
-    return validate.validate(teams, by_season, today)
+    return validate.validate(teams, by_season, today, known)
 
 
 class ValidateTeamsTest(unittest.TestCase):
@@ -366,7 +366,48 @@ class ValidateGamesTest(unittest.TestCase):
     def test_team_over_162_games_is_error(self):
         games = [norm_game(i, "2025-04-01", 1, 2 + i % 28) for i in range(1, 164)]
         report = run_validate(make_teams(), games)
-        self.assertTrue(any("more than 162" in message for message in report.errors))
+        self.assertTrue(any("more than the 162 expected" in message for message in report.errors))
+
+    def test_game_between_non_mlb_teams_is_warning_and_excluded(self):
+        # e.g. an All-Star or exhibition game reported with team ids of -1.
+        games = complete_season()
+        games.append(norm_game(99999, "2025-07-15", -1, -1, 4, 3))
+        report = run_validate(make_teams(), games)
+        self.assertEqual(report.errors, [])
+        self.assertEqual(len(report.warnings), 1)
+        self.assertIn("not between two MLB teams", report.warnings[0])
+        self.assertIn("2025-07-15", report.warnings[0])   # message says which game it is
+
+    def test_one_sided_unknown_team_is_still_an_error(self):
+        games = [norm_game(1, "2025-04-01", 5, -1)]
+        report = run_validate(make_teams(), games)
+        self.assertTrue(any("unknown team id" in message for message in report.errors))
+
+    def test_known_cancellation_explains_missing_game(self):
+        games = complete_season()
+        missing = games.pop()   # remove one game, as if it was cancelled
+        teams_pair = sorted([missing["home_team_id"], missing["away_team_id"]])
+        known = [{"season": 2025, "date": missing["date_et"], "teams": teams_pair,
+                  "note": "rained out"}]
+        report = run_validate(make_teams(), games, known=known)
+        self.assertEqual(report.errors, [])
+        self.assertEqual(report.warnings, [])
+        self.assertTrue(any("known cancellation" in message for message in report.infos))
+
+    def test_unexplained_missing_game_still_warns(self):
+        games = complete_season()
+        missing = games.pop()
+        other_pair = [t for t in range(1, 31) if t not in (missing["home_team_id"], missing["away_team_id"])][:2]
+        known = [{"season": 2025, "date": "2025-09-01", "teams": other_pair}]
+        report = run_validate(make_teams(), games, known=known)
+        self.assertTrue(report.warnings)
+
+    def test_played_game_listed_as_cancelled_is_flagged(self):
+        # If the known list says a game was cancelled but all 162 were played, say so.
+        games = complete_season()
+        known = [{"season": 2025, "date": "2025-09-01", "teams": [1, 2]}]
+        report = run_validate(make_teams(), games, known=known)
+        self.assertTrue(report.errors)
 
     def test_shortened_2020_season_uses_its_own_totals(self):
         games = [norm_game(1, "2020-08-01", 1, 2, season=2020, state="scheduled",
