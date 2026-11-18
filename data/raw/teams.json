@@ -1,0 +1,278 @@
+{
+ "meta": {
+  "fetched_at_utc": "2026-11-18T19:51:49Z",
+  "source": "balldontlie"
+ },
+ "teams": [
+  {
+   "abbreviation": "ARI",
+   "display_name": "Arizona Diamondbacks",
+   "division": "West",
+   "id": 1,
+   "league": "National",
+   "location": "Arizona",
+   "name": "Diamondbacks"
+  },
+  {
+   "abbreviation": "ATL",
+   "display_name": "Atlanta Braves",
+   "division": "East",
+   "id": 2,
+   "league": "National",
+   "location": "Atlanta",
+   "name": "Braves"
+  },
+  {
+   "abbreviation": "BAL",
+   "display_name": "Baltimore Orioles",
+   "division": "East",
+   "id": 3,
+   "league": "American",
+   "location": "Baltimore",
+   "name": "Orioles"
+  },
+  {
+   "abbreviation": "BOS",
+   "display_name": "Boston Red Sox",
+   "division": "East",
+   "id": 4,
+   "league": "American",
+   "location": "Boston",
+   "name": "Red Sox"
+  },
+  {
+   "abbreviation": "CHC",
+   "display_name": "Chicago Cubs",
+   "division": "Central",
+   "id": 5,
+   "league": "National",
+   "location": "Chicago",
+   "name": "Cubs"
+  },
+  {
+   "abbreviation": "CHW",
+   "display_name": "Chicago White Sox",
+   "division": "Central",
+   "id": 6,
+   "league": "American",
+   "location": "Chicago",
+   "name": "White Sox"
+  },
+  {
+   "abbreviation": "CIN",
+   "display_name": "Cincinnati Reds",
+   "division": "Central",
+   "id": 7,
+   "league": "National",
+   "location": "Cincinnati",
+   "name": "Reds"
+  },
+  {
+   "abbreviation": "CLE",
+   "display_name": "Cleveland Guardians",
+   "division": "Central",
+   "id": 8,
+   "league": "American",
+   "location": "Cleveland",
+   "name": "Guardians"
+  },
+  {
+   "abbreviation": "COL",
+   "display_name": "Colorado Rockies",
+   "division": "West",
+   "id": 9,
+   "league": "National",
+   "location": "Colorado",
+   "name": "Rockies"
+  },
+  {
+   "abbreviation": "DET",
+   "display_name": "Detroit Tigers",
+   "division": "Central",
+   "id": 10,
+   "league": "American",
+   "location": "Detroit",
+   "name": "Tigers"
+  },
+  {
+   "abbreviation": "HOU",
+   "display_name": "Houston Astros",
+   "division": "West",
+   "id": 11,
+   "league": "American",
+   "location": "Houston",
+   "name": "Astros"
+  },
+  {
+   "abbreviation": "KC",
+   "display_name": "Kansas City Royals",
+   "division": "Central",
+   "id": 12,
+   "league": "American",
+   "location": "Kansas City",
+   "name": "Royals"
+  },
+  {
+   "abbreviation": "LAA",
+   "display_name": "Los Angeles Angels",
+   "division": "West",
+   "id": 13,
+   "league": "American",
+   "location": "Los Angeles",
+   "name": "Angels"
+  },
+  {
+   "abbreviation": "LAD",
+   "display_name": "Los Angeles Dodgers",
+   "division": "West",
+   "id": 14,
+   "league": "National",
+   "location": "Los Angeles",
+   "name": "Dodgers"
+  },
+  {
+   "abbreviation": "MIA",
+   "display_name": "Miami Marlins",
+   "division": "East",
+   "id": 15,
+   "league": "National",
+   "location": "Miami",
+   "name": "Marlins"
+  },
+  {
+   "abbreviation": "MIL",
+   "display_name": "Milwaukee Brewers",
+   "division": "Central",
+   "id": 16,
+   "league": "National",
+   "location": "Milwaukee",
+   "name": "Brewers"
+  },
+  {
+   "abbreviation": "MIN",
+   "display_name": "Minnesota Twins",
+   "division": "Central",
+   "id": 17,
+   "league": "American",
+   "location": "Minnesota",
+   "name": "Twins"
+  },
+  {
+   "abbreviation": "NYM",
+   "display_name": "New York Mets",
+   "division": "East",
+   "id": 18,
+   "league": "National",
+   "location": "New York",
+   "name": "Mets"
+  },
+  {
+   "abbreviation": "NYY",
+   "display_name": "New York Yankees",
+   "division": "East",
+   "id": 19,
+   "league": "American",
+   "location": "New York",
+   "name": "Yankees"
+  },
+  {
+   "abbreviation": "OAK",
+   "display_name": "Oakland Athletics",
+   "division": "West",
+   "id": 20,
+   "league": "American",
+   "location": "Oakland",
+   "name": "Athletics"
+  },
+  {
+   "abbreviation": "PHI",
+   "display_name": "Philadelphia Phillies",
+   "division": "East",
+   "id": 21,
+   "league": "National",
+   "location": "Philadelphia",
+   "name": "Phillies"
+  },
+  {
+   "abbreviation": "PIT",
+   "display_name": "Pittsburgh Pirates",
+   "division": "Central",
+   "id": 22,
+   "league": "National",
+   "location": "Pittsburgh",
+   "name": "Pirates"
+  },
+  {
+   "abbreviation": "SD",
+   "display_name": "San Diego Padres",
+   "division": "West",
+   "id": 23,
+   "league": "National",
+   "location": "San Diego",
+   "name": "Padres"
+  },
+  {
+   "abbreviation": "SF",
+   "display_name": "San Francisco Giants",
+   "division": "West",
+   "id": 24,
+   "league": "National",
+   "location": "San Francisco",
+   "name": "Giants"
+  },
+  {
+   "abbreviation": "SEA",
+   "display_name": "Seattle Mariners",
+   "division": "West",
+   "id": 25,
+   "league": "American",
+   "location": "Seattle",
+   "name": "Mariners"
+  },
+  {
+   "abbreviation": "STL",
+   "display_name": "St. Louis Cardinals",
+   "division": "Central",
+   "id": 26,
+   "league": "National",
+   "location": "St. Louis",
+   "name": "Cardinals"
+  },
+  {
+   "abbreviation": "TB",
+   "display_name": "Tampa Bay Rays",
+   "division": "East",
+   "id": 27,
+   "league": "American",
+   "location": "Tampa Bay",
+   "name": "Rays"
+  },
+  {
+   "abbreviation": "TEX",
+   "display_name": "Texas Rangers",
+   "division": "West",
+   "id": 28,
+   "league": "American",
+   "location": "Texas",
+   "name": "Rangers"
+  },
+  {
+   "abbreviation": "TOR",
+   "display_name": "Toronto Blue Jays",
+   "division": "East",
+   "id": 29,
+   "league": "American",
+   "location": "Toronto",
+   "name": "Blue Jays"
+  },
+  {
+   "abbreviation": "WSH",
+   "display_name": "Washington Nationals",
+   "division": "East",
+   "id": 30,
+   "league": "National",
+   "location": "Washington",
+   "name": "Nationals"
+  }
+ ]
+}

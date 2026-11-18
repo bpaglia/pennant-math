@@ -1,0 +1,6 @@
+WARN   2024: season looks complete but has 2429 final games (expected 2430); some games may be missing or were cancelled. Compare against official standings.
+WARN   2024: 2 teams have fewer than 162 games: [8, 11]
+WARN   2026: 3 teams have fewer than 162 games: [-1, 3, 19]
+ERROR  Game 8712499: unknown team id (home=-1, away=-1)
+ERROR  Game 8712499: a team is playing itself (-1)
+checked 30 teams and 10025 games (2023, 2024, 2025, 2026): 2 errors, 3 warnings
