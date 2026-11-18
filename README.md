@@ -48,6 +48,10 @@ Errors stop the build (exit code 1):
 - no team with more than 162 final games (60 in 2020)
 - average runs per team per game between 3.0 and 6.5 (catches parsing mistakes)
 
+Games where neither side is one of the 30 MLB teams (for example an All-Star or exhibition game) produce a warning and are left out of every count. A game with exactly one unknown team is an error, because a real team is missing.
+
+Verified cancellations that were never made up are listed in `data/known_cancellations.json` (with a source link for each). The validator expects those teams to be one game short and reports an INFO line instead of a warning. When you see a new short-season warning, confirm it against news or official standings before adding it to that file.
+
 Warnings are printed but do not fail the build, because they can happen for real. Use `--strict` to fail on them too:
 - a season that looks complete but has fewer than 2,430 final games, or teams with fewer than 162 (a missing game, or a cancelled game that was never replayed: compare against official standings)
 - a game still marked scheduled several days after its date
