@@ -1,0 +1,15 @@
+2023: 2430 games (complete, as of 2023-10-01)
+2024: 2429 games (complete, as of 2024-09-30)
+2025: 2430 games (complete, as of 2025-09-28)
+2026: 2429 games (complete, as of 2026-09-27)
+2026 luck (actual minus expected wins): luckiest CIN +10.3, TB +7.7, SD +5.6; unluckiest DET -12.7, LAA -8.7, CHC -6.5
+2026 Elo, top 5 at season end: MIL 1615, LAD 1576, NYY 1559, SD 1551, TB 1550
+Elo 2023: log loss 0.6822 vs 0.6923 baseline, accuracy 55.3%
+Elo 2024: log loss 0.6815 vs 0.6922 baseline, accuracy 56.2%
+Elo 2025: log loss 0.6789 vs 0.6895 baseline, accuracy 56.6%
+Elo 2026: log loss 0.6843 vs 0.6915 baseline, accuracy 55.6%
+OK     2024 CLE: 92-69 matches the official record
+OK     2024 HOU: 88-73 matches the official record
+OK     2026 BAL: 79-82 matches the official record
+OK     2026 NYY: 93-68 matches the official record
+wrote standings.json, rolling_rd.json, elo.json to data/processed

@@ -1,4 +1,4 @@
+INFO   Game 8712499: not between two MLB teams (team ids -1 and -1); dated 2026-07-14, regular, status final, score 4-0 (away-home). Excluded from standings.
 INFO   2024: accounted for a known cancellation on 2024-09-29 (teams [8, 11]): Houston at Cleveland regular-season finale rained out and not made up; neither team's playoff seeding could change.
 INFO   2026: accounted for a known cancellation on 2026-09-27 (teams [3, 19]): Baltimore at New York (AL) regular-season finale canceled by a nor'easter and not rescheduled.
-WARN   Game 8712499: not between two MLB teams (team ids -1 and -1); dated 2026-07-14, regular, status final, score 4-0 (away-home). Excluded from standings. Check whether it is an All-Star or exhibition game.
-checked 30 teams and 10025 games (2023, 2024, 2025, 2026): 0 errors, 1 warnings
+checked 30 teams and 10025 games (2023, 2024, 2025, 2026): 0 errors, 0 warnings
