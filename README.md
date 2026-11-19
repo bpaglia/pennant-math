@@ -44,6 +44,24 @@ Elo starting values are K = 4, home advantage = 24 points, and a one-third pull 
 
 `compute.py` also stops with an error if it finds an impossible total (wins not equal to losses, runs scored not equal to runs allowed), or if a computed record does not match a verified official record listed under `official_records` in `data/known_cancellations.json`.
 
+## Playoff odds (odds.py)
+
+```
+python pipeline/odds.py                                   # latest season, as of its last game
+python pipeline/odds.py --season 2026 --as-of 2026-08-15  # any date
+python pipeline/odds.py --backtest 2024 2025 2026 --sims 2000 --step-days 7
+```
+
+Needs `numpy` (`pip install -r requirements.txt`; the GitHub workflow does this for you) and the files from `compute.py`.
+
+As of a date, games already played are fixed and every later regular-season game is simulated, 10,000 times, using each team's Elo rating on that date. Each league sends six teams to the playoffs: three division winners and three wild cards. The share of simulations in which a team gets in is its playoff probability. Ties in wins are broken by head-to-head record among the tied teams, then division record, then a random draw. This is a simplification of MLB's full tiebreak rules.
+
+`odds.json` holds, per team: playoff, division, and first-round-bye probabilities, projected final wins (with a 10th to 90th percentile range), expected wins in the remaining games, and remaining schedule strength (average opponent Elo, adjusted for home and road games, relative to the league average; positive means a harder schedule).
+
+**Checks built in.** Probabilities must add up to 12 playoff spots, 6 division winners, and 4 byes in every run. For a completed season, the model's final playoff field is compared with the teams that actually played in the postseason; a mismatch is reported as a warning and usually means a tiebreak rule differs from MLB's.
+
+**Backtest.** `--backtest` replays past seasons week by week, hiding everything after each date, and scores the odds against who really made the playoffs (Brier score, lower is better) next to two simple baselines: a constant 40 percent for every team, and "in a playoff spot right now." It also prints a calibration table: of teams given about 30 percent, roughly how many got in? It writes `backtest.json` and `odds_history.json` (the playoff-odds-over-time chart data). In the GitHub workflow, tick **run_backtest** when you start a run. The first replayed season (2023) is a warm-up for the ratings, so its odds are the least reliable.
+
 ## Running without installing Python (GitHub, in the browser)
 
 If you cannot install Python, GitHub can run everything for you:
@@ -52,7 +70,7 @@ If you cannot install Python, GitHub can run everything for you:
 2. Add your API key as a secret named `BALLDONTLIE_API_KEY` (repository Settings > Secrets and variables > Actions).
 3. Open the Actions tab, choose **Fetch, validate, and compute**, and click **Run workflow**.
 
-The workflow runs the tests, fetches the data, validates it, computes the standings and ratings, shows both reports on the run page, and saves everything into the repository's `data/` folder. GitHub Actions is free for public repositories.
+The workflow runs the tests, fetches the data, validates it, computes the standings and ratings, simulates the playoff odds, shows the reports on the run page, and saves everything into the repository's `data/` folder. GitHub Actions is free for public repositories.
 
 ## What the validator checks
 
@@ -88,6 +106,7 @@ The tests use a local mock server and synthetic data, so they need no network ac
 
 ## Next steps
 
-1. Playoff odds simulation and schedule strength.
+1. Tune Elo (K, home advantage, preseason projections) using the backtest.
 2. The page: standings table, record-vs-true-talent chart, and playoff-odds charts.
 3. The scheduled daily refresh.
+
