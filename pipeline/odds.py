@@ -5,6 +5,7 @@ Usage:
     python pipeline/odds.py                                  # latest season, as of its last game
     python pipeline/odds.py --season 2026 --as-of 2026-08-15
     python pipeline/odds.py --backtest 2024 2025 2026 --sims 2000 --step-days 7
+    python pipeline/odds.py --tune-noise 0 10 20 30 40 --sims 1000 --step-days 14
 
 How it works: as of a date, take every game already played as fixed, treat every
 later regular-season game as unplayed, and simulate those games thousands of times.
@@ -43,6 +44,7 @@ from validate import OPEN_STATES, is_league_game, load_raw
 
 DEFAULT_SIMS = 10_000
 DEFAULT_SEED = 12345
+DEFAULT_RATING_NOISE = 0.0     # Elo points; set from the tuning run (see --tune-noise)
 CHUNK_SIZE = 500
 DIVISION_WINNERS = 3
 WILD_CARDS = 3
@@ -286,10 +288,17 @@ def _classify(state: SeasonState, wins: np.ndarray, hw: np.ndarray, rng):
 
 
 def simulate(state: SeasonState, ratings: dict, n_sims: int = DEFAULT_SIMS, seed: int = DEFAULT_SEED,
-             home_advantage: float = ELO_DEFAULTS["home_advantage"]) -> dict:
-    """Play out the rest of the season `n_sims` times."""
+             home_advantage: float = ELO_DEFAULTS["home_advantage"], rating_noise: float = DEFAULT_RATING_NOISE) -> dict:
+    """Play out the rest of the season `n_sims` times.
+
+    With `rating_noise` above zero, each simulation gives every team its own true strength,
+    drawn around its Elo rating with that standard deviation (in rating points) and held
+    fixed for the rest of that simulation. Elo ratings are estimates, not facts, so this
+    widens the range of outcomes and keeps favorites and long shots from looking too certain.
+    """
     rng = np.random.default_rng(seed)
     p_home = home_win_probabilities(state, ratings, home_advantage)
+    base_ratings = np.array([ratings[team_id] for team_id in state.ids], dtype=np.float64)
     division_count = np.zeros(state.n)
     playoff_count = np.zeros(state.n)
     bye_count = np.zeros(state.n)
@@ -298,7 +307,13 @@ def simulate(state: SeasonState, ratings: dict, n_sims: int = DEFAULT_SIMS, seed
     done = 0
     while done < n_sims:
         c = min(CHUNK_SIZE, n_sims - done)
-        hw = rng.random((c, state.G)) < p_home
+        if rating_noise > 0 and state.G:
+            team_ratings = base_ratings + rng.normal(0.0, rating_noise, (c, state.n))
+            difference = team_ratings[:, state.rem_home] + home_advantage - team_ratings[:, state.rem_away]
+            probabilities = 1.0 / (1.0 + 10.0 ** (-difference / 400.0))
+        else:
+            probabilities = p_home
+        hw = rng.random((c, state.G)) < probabilities
         added = hw.astype(np.float32) @ state.D + state.base
         wins = (state.wins + np.rint(added)).astype(np.int32)
         is_div, is_bye, is_po = _classify(state, wins, hw, rng)
@@ -429,7 +444,8 @@ def season_dates(first: str, last: str, step_days: int, start_offset_days: int =
 # --------------------------------------------------------------------------
 
 def run_backtest(teams: list, games_by_season: dict, elo_data: dict, seasons: list,
-                 n_sims: int, step_days: int, seed: int, home_advantage: float) -> dict:
+                 n_sims: int, step_days: int, seed: int, home_advantage: float,
+                 rating_noise: float = DEFAULT_RATING_NOISE) -> dict:
     """Replay past seasons date by date and score the odds against what happened."""
     team_ids = {team["id"] for team in teams}
     records = []                 # one record per (season, date, team)
@@ -458,7 +474,7 @@ def run_backtest(teams: list, games_by_season: dict, elo_data: dict, seasons: li
         for as_of in dates:
             state = SeasonState(teams, season_games, as_of)
             ratings = ratings_as_of(elo_data, season, as_of, state.ids)
-            result = simulate(state, ratings, n_sims, seed, home_advantage)
+            result = simulate(state, ratings, n_sims, seed, home_advantage, rating_noise)
             current = simulate(SeasonState(teams, season_games, as_of, include_remaining=False),
                                ratings, 1, seed, home_advantage)
             days_left = (last_date - date.fromisoformat(as_of)).days
@@ -475,6 +491,25 @@ def run_backtest(teams: list, games_by_season: dict, elo_data: dict, seasons: li
                     "y_div": 1.0 if team_id in truth_division else 0.0,
                 })
     return {"records": records, "history": history, "field_check": field_check}
+
+
+def tune_rating_noise(teams: list, games_by_season: dict, elo_data: dict, seasons: list, values: list,
+                      n_sims: int, step_days: int, seed: int, home_advantage: float) -> list:
+    """Run the backtest once per candidate noise level and compare the scores."""
+    rows = []
+    for sigma in values:
+        outcome = run_backtest(teams, games_by_season, elo_data, seasons, n_sims, step_days, seed,
+                               home_advantage, rating_noise=sigma)
+        summary = summarize_backtest(outcome["records"])
+        early = [h for h in summary["by_horizon"] if h["horizon"].startswith("more than")]
+        rows.append({
+            "rating_noise": sigma,
+            "brier": summary["overall"]["brier_model"],
+            "brier_early": early[0]["brier_model"] if early else None,
+            "calibration_error": summary["calibration_error"],
+            "by_season": {season: item["brier_model"] for season, item in summary["by_season"].items()},
+        })
+    return rows
 
 
 def summarize_backtest(records: list) -> dict:
@@ -512,7 +547,10 @@ def summarize_backtest(records: list) -> dict:
                 "mean_predicted": round(float(p[mask].mean()), 3),
                 "observed_rate": round(float(y[mask].mean()), 3),
             })
+    calibration_error = (sum(item["n"] * abs(item["mean_predicted"] - item["observed_rate"]) for item in calibration)
+                         / sum(item["n"] for item in calibration)) if calibration else None
     return {
+        "calibration_error": None if calibration_error is None else round(calibration_error, 4),
         "overall": block(np.ones(len(p), dtype=bool)),
         "by_horizon": [dict(horizon=name, **block(mask)) for name, mask in horizons if mask.any()],
         "by_season": {str(s): block(np.array([r["season"] == s for r in records]))
@@ -537,6 +575,11 @@ def parse_args(argv=None) -> argparse.Namespace:
     parser.add_argument("--backtest", nargs="+", type=int, default=None, metavar="SEASON",
                         help="Replay these seasons and score the odds.")
     parser.add_argument("--step-days", type=int, default=7, help="Days between backtest dates.")
+    parser.add_argument("--rating-noise", type=float, default=DEFAULT_RATING_NOISE,
+                        help="Spread, in Elo points, of each team's true strength across simulations.")
+    parser.add_argument("--tune-noise", nargs="+", type=float, default=None, metavar="POINTS",
+                        help="Backtest several noise levels and print a comparison (uses --backtest seasons, "
+                             "or all seasons in the data).")
     return parser.parse_args(argv)
 
 
@@ -561,12 +604,21 @@ def main(argv=None) -> int:
     team_ids = {team["id"] for team in teams}
     home_advantage = elo_data.get("meta", {}).get("params", {}).get("home_advantage", ELO_DEFAULTS["home_advantage"])
     meta = {"generated_at_utc": utc_now_iso(), "n_sims": args.sims, "seed": args.seed,
-            "home_advantage": home_advantage, "tiebreaks": "head-to-head, then division record, then random"}
+            "home_advantage": home_advantage, "rating_noise": args.rating_noise,
+            "tiebreaks": "head-to-head, then division record, then random"}
 
     try:
+        if args.tune_noise:
+            seasons = args.backtest or sorted(games_by_season)
+            rows = tune_rating_noise(teams, games_by_season, elo_data, seasons, args.tune_noise,
+                                     args.sims, args.step_days, args.seed, home_advantage)
+            write_json(args.processed / "noise_tuning.json",
+                       {"meta": dict(meta, seasons=seasons, step_days=args.step_days), "results": rows})
+            print_tuning(rows)
+            return 0
         if args.backtest:
             outcome = run_backtest(teams, games_by_season, elo_data, args.backtest,
-                                   args.sims, args.step_days, args.seed, home_advantage)
+                                   args.sims, args.step_days, args.seed, home_advantage, args.rating_noise)
             summary = summarize_backtest(outcome["records"])
             write_json(args.processed / "backtest.json",
                        {"meta": dict(meta, seasons=args.backtest, step_days=args.step_days),
@@ -582,7 +634,7 @@ def main(argv=None) -> int:
         as_of = args.as_of or last
         state = SeasonState(teams, season_games, as_of)
         ratings = ratings_as_of(elo_data, season, as_of, state.ids)
-        result = simulate(state, ratings, args.sims, args.seed, home_advantage)
+        result = simulate(state, ratings, args.sims, args.seed, home_advantage, args.rating_noise)
         extra = schedule_and_projection(state, ratings, home_advantage)
         rows = build_team_rows(state, ratings, result, extra)
         write_json(args.processed / "odds.json",
@@ -612,6 +664,19 @@ def print_odds(season: int, as_of: str, rows: list, state: SeasonState) -> None:
         print(f"  {league}: " + ", ".join(f"{r['abbreviation']} {r['p_playoffs']:.0%}" for r in top))
 
 
+def print_tuning(rows: list) -> None:
+    seasons = sorted({season for row in rows for season in row["by_season"]})
+    print("rating noise tuning (lower Brier and lower calibration error are better)")
+    header = "  noise | Brier | early Brier | calib. error | " + " | ".join(seasons)
+    print(header)
+    for row in rows:
+        per_season = " | ".join(f"{row['by_season'].get(season, float('nan')):.4f}" for season in seasons)
+        early = "n/a" if row["brier_early"] is None else f"{row['brier_early']:.4f}"
+        print(f"  {row['rating_noise']:>5.0f} | {row['brier']:.4f} | {early} | {row['calibration_error']:.4f} | {per_season}")
+    best = min(rows, key=lambda row: row["brier"])
+    print(f"lowest Brier: {best['rating_noise']:.0f} points")
+
+
 def print_backtest(summary: dict, field_check: dict, teams_by_id: dict) -> None:
     for season, check in sorted(field_check.items()):
         if check["matches"]:
@@ -623,6 +688,7 @@ def print_backtest(summary: dict, field_check: dict, teams_by_id: dict) -> None:
         print("no backtest results")
         return
     overall = summary["overall"]
+    print(f"calibration error (average gap between predicted and actual): {summary['calibration_error']}")
     print(f"Brier score, all dates ({overall['n']} team-dates): model {overall['brier_model']}, "
           f"in-position-now {overall['brier_in_position_now']}, constant {overall['brier_constant']} (lower is better)")
     for item in summary["by_horizon"]:
