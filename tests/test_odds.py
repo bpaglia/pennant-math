@@ -287,6 +287,68 @@ class BacktestTest(unittest.TestCase):
         self.assertGreater(summary["overall"]["brier_constant"], 0.2)
 
 
+class RatingNoiseTest(unittest.TestCase):
+    def setUp(self):
+        self.state = odds.SeasonState(TEAMS, complete_season(), "2025-01-01")
+
+    def test_zero_noise_is_the_same_as_the_default(self):
+        a = odds.simulate(self.state, EQUAL, n_sims=300, seed=5)
+        b = odds.simulate(self.state, EQUAL, n_sims=300, seed=5, rating_noise=0.0)
+        self.assertTrue(np.array_equal(a["p_playoffs"], b["p_playoffs"]))
+
+    def test_equal_teams_stay_equal_and_the_field_size_holds(self):
+        result = odds.simulate(self.state, EQUAL, n_sims=2000, seed=6, rating_noise=40.0)
+        self.assertAlmostEqual(float(result["p_playoffs"].sum()), 12.0, places=6)
+        self.assertTrue(np.all(np.abs(result["p_playoffs"] - 0.4) < 0.05))
+
+    def test_noise_pulls_favorites_down_and_long_shots_up(self):
+        ratings = dict(EQUAL)
+        ratings[1], ratings[2] = 1600.0, 1400.0
+        sharp = odds.simulate(self.state, ratings, n_sims=3000, seed=8, rating_noise=0.0)
+        fuzzy = odds.simulate(self.state, ratings, n_sims=3000, seed=8, rating_noise=80.0)
+        self.assertLess(fuzzy["p_playoffs"][0], sharp["p_playoffs"][0])       # favorite is less certain
+        self.assertGreater(fuzzy["p_playoffs"][1], sharp["p_playoffs"][1])    # long shot is less hopeless
+
+    def test_noise_is_reproducible(self):
+        a = odds.simulate(self.state, EQUAL, n_sims=300, seed=9, rating_noise=30.0)
+        b = odds.simulate(self.state, EQUAL, n_sims=300, seed=9, rating_noise=30.0)
+        self.assertTrue(np.array_equal(a["p_playoffs"], b["p_playoffs"]))
+
+    def test_noise_does_nothing_when_no_games_are_left(self):
+        state = odds.SeasonState(TEAMS, ordered_season(), "2025-12-31")
+        result = odds.simulate(state, EQUAL, n_sims=10, seed=1, rating_noise=50.0)
+        self.assertEqual({state.ids[i] for i in range(30) if result["p_playoffs"][i] == 1.0},
+                         {1, 2, 3, 4, 6, 11, 16, 17, 18, 19, 21, 26})
+
+
+class TuningTest(unittest.TestCase):
+    def test_tuning_reports_one_row_per_noise_level(self):
+        games = complete_season()
+        for k, (a, b) in enumerate([(1, 2), (6, 7), (11, 12), (16, 17), (21, 22), (26, 27)]):
+            games.append(norm_game(50000 + k, "2025-10-05", a, b, 5, 3, season_type="postseason"))
+        elo = compute.run_elo({2025: games}, TEAM_ID_SET)
+        rows = odds.tune_rating_noise(TEAMS, {2025: games}, elo, [2025], [0.0, 25.0], n_sims=60,
+                                      step_days=60, seed=1, home_advantage=24.0)
+        self.assertEqual([row["rating_noise"] for row in rows], [0.0, 25.0])
+        for row in rows:
+            self.assertTrue(0 <= row["brier"] <= 1)
+            self.assertIn("2025", row["by_season"])
+            self.assertIsNotNone(row["calibration_error"])
+
+    def test_calibration_error_is_zero_for_a_perfect_forecast(self):
+        records = [{"season": 2025, "as_of": "2025-06-01", "days_left": 100, "team_id": i,
+                    "p": 1.0 if i <= 12 else 0.0, "y": 1.0 if i <= 12 else 0.0,
+                    "in_position_now": 0.0, "p_div": 0.0, "y_div": 0.0} for i in range(1, 31)]
+        self.assertEqual(odds.summarize_backtest(records)["calibration_error"], 0.0)
+
+    def test_calibration_error_detects_overconfidence(self):
+        # Always says 90% but only half come true.
+        records = [{"season": 2025, "as_of": "2025-06-01", "days_left": 100, "team_id": i,
+                    "p": 0.9, "y": 1.0 if i % 2 else 0.0, "in_position_now": 0.0, "p_div": 0.0, "y_div": 0.0}
+                   for i in range(1, 31)]
+        self.assertAlmostEqual(odds.summarize_backtest(records)["calibration_error"], 0.4, places=3)
+
+
 class CommandLineTest(unittest.TestCase):
     def write_inputs(self, root: Path):
         raw = root / "raw"
@@ -317,6 +379,23 @@ class CommandLineTest(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertTrue((processed / "backtest.json").exists())
             self.assertTrue((processed / "odds_history.json").exists())
+
+    def test_tune_noise_run_writes_a_comparison(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw, processed = self.write_inputs(Path(tmp))
+            code = odds.main(["--raw", str(raw), "--processed", str(processed),
+                              "--tune-noise", "0", "30", "--sims", "60", "--step-days", "60"])
+            self.assertEqual(code, 0)
+            data = json.loads((processed / "noise_tuning.json").read_text())
+            self.assertEqual([row["rating_noise"] for row in data["results"]], [0.0, 30.0])
+
+    def test_rating_noise_flag_is_recorded_in_the_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw, processed = self.write_inputs(Path(tmp))
+            odds.main(["--raw", str(raw), "--processed", str(processed), "--as-of", "2025-07-01",
+                       "--sims", "100", "--rating-noise", "25"])
+            data = json.loads((processed / "odds.json").read_text())
+            self.assertEqual(data["meta"]["rating_noise"], 25.0)
 
     def test_missing_elo_file_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
