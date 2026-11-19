@@ -103,16 +103,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
 
-        git add data
-
-        if git diff --cached --quiet; then
-          echo "No new data to save."
-        else
-          git commit -m "Update raw data"
-          git pull --rebase origin main
-          git push origin HEAD:main
-        fi
+          if git diff --cached --quiet; then
+            echo "No new data to save."
+          else
+            git commit -m "Update raw data"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
     
       - name: Fail the run if validation or computing found problems
         if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure'
