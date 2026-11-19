@@ -2,6 +2,7 @@ field check 2023: OK
 field check 2024: OK
 field check 2025: OK
 field check 2026: OK
+calibration error (average gap between predicted and actual): 0.0492
 Brier score, all dates (3060 team-dates): model 0.1253, in-position-now 0.185, constant 0.24 (lower is better)
   more than 120 days left: model 0.1717, in-position-now 0.251, constant 0.24
   60 to 120 days left: model 0.1272, in-position-now 0.198, constant 0.24

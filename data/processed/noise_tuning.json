@@ -1,0 +1,91 @@
+{
+ "meta": {
+  "generated_at_utc": "2026-11-19T21:19:12Z",
+  "home_advantage": 24.0,
+  "n_sims": 1000,
+  "rating_noise": 0.0,
+  "seasons": [
+   2023,
+   2024,
+   2025,
+   2026
+  ],
+  "seed": 12345,
+  "step_days": 14,
+  "tiebreaks": "head-to-head, then division record, then random"
+ },
+ "results": [
+  {
+   "brier": 0.1262,
+   "brier_early": 0.1728,
+   "by_season": {
+    "2023": 0.1073,
+    "2024": 0.1401,
+    "2025": 0.1565,
+    "2026": 0.1008
+   },
+   "calibration_error": 0.0576,
+   "rating_noise": 0.0
+  },
+  {
+   "brier": 0.1258,
+   "brier_early": 0.1722,
+   "by_season": {
+    "2023": 0.1076,
+    "2024": 0.1389,
+    "2025": 0.1561,
+    "2026": 0.1007
+   },
+   "calibration_error": 0.0594,
+   "rating_noise": 10.0
+  },
+  {
+   "brier": 0.1246,
+   "brier_early": 0.1696,
+   "by_season": {
+    "2023": 0.1075,
+    "2024": 0.1369,
+    "2025": 0.1539,
+    "2026": 0.1
+   },
+   "calibration_error": 0.0373,
+   "rating_noise": 20.0
+  },
+  {
+   "brier": 0.1228,
+   "brier_early": 0.1668,
+   "by_season": {
+    "2023": 0.109,
+    "2024": 0.1333,
+    "2025": 0.1483,
+    "2026": 0.1005
+   },
+   "calibration_error": 0.0286,
+   "rating_noise": 30.0
+  },
+  {
+   "brier": 0.1231,
+   "brier_early": 0.167,
+   "by_season": {
+    "2023": 0.1118,
+    "2024": 0.1319,
+    "2025": 0.1471,
+    "2026": 0.1017
+   },
+   "calibration_error": 0.0233,
+   "rating_noise": 40.0
+  },
+  {
+   "brier": 0.1228,
+   "brier_early": 0.1667,
+   "by_season": {
+    "2023": 0.1136,
+    "2024": 0.1301,
+    "2025": 0.1448,
+    "2026": 0.1025
+   },
+   "calibration_error": 0.0237,
+   "rating_noise": 50.0
+  }
+ ]
+}

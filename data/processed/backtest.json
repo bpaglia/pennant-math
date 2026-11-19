@@ -130,9 +130,10 @@
   }
  },
  "meta": {
-  "generated_at_utc": "2026-11-19T20:58:56Z",
+  "generated_at_utc": "2026-11-19T21:18:56Z",
   "home_advantage": 24.0,
   "n_sims": 2000,
+  "rating_noise": 0.0,
   "seasons": [
    2023,
    2024,
@@ -262,6 +263,7 @@
     "observed_rate": 0.947
    }
   ],
+  "calibration_error": 0.0492,
   "division_brier_model": 0.1035,
   "overall": {
    "brier_constant": 0.24,
