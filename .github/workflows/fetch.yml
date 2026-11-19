@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -101,12 +103,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git pull --rebase origin main
+
           git add data
           if git diff --cached --quiet; then
             echo "No new data to save."
           else
             git commit -m "Update raw data"
-            git push
+            git push origin HEAD:main
           fi
 
       - name: Fail the run if validation or computing found problems
