@@ -62,6 +62,8 @@ As of a date, games already played are fixed and every later regular-season game
 
 **Backtest.** `--backtest` replays past seasons week by week, hiding everything after each date, and scores the odds against who really made the playoffs (Brier score, lower is better) next to two simple baselines: a constant 40 percent for every team, and "in a playoff spot right now." It also prints a calibration table: of teams given about 30 percent, roughly how many got in? It writes `backtest.json` and `odds_history.json` (the playoff-odds-over-time chart data). In the GitHub workflow, tick **run_backtest** when you start a run. The first replayed season (2023) is a warm-up for the ratings, so its odds are the least reliable.
 
+**Rating uncertainty.** An Elo rating is an estimate of a team's strength, not the truth. By default every simulation uses the ratings exactly, which tends to make favorites and long shots look too certain. `--rating-noise POINTS` gives each simulated season its own version of every team's strength, drawn around its rating with that spread, which pulls the extremes back toward reality. Find the right spread by running `--tune-noise 0 10 20 30 40 50` (or tick **tune_noise** in the workflow): it backtests each level and prints Brier score and calibration error side by side. Pick the level with the best scores that also improves most seasons, then set `DEFAULT_RATING_NOISE` in `pipeline/odds.py`. With only a few seasons of data, prefer a modest value over the single best one.
+
 ## Running without installing Python (GitHub, in the browser)
 
 If you cannot install Python, GitHub can run everything for you:
