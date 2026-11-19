@@ -1,0 +1,62 @@
+{
+  "cancellations": [
+    {
+      "season": 2024,
+      "date": "2024-09-29",
+      "teams": [
+        8,
+        11
+      ],
+      "note": "Houston at Cleveland regular-season finale rained out and not made up; neither team's playoff seeding could change.",
+      "source": "https://www.mlb.com/news/astros-guardians-september-29-2024-game-cancelled"
+    },
+    {
+      "season": 2026,
+      "date": "2026-09-27",
+      "teams": [
+        3,
+        19
+      ],
+      "note": "Baltimore at New York (AL) regular-season finale canceled by a nor'easter and not rescheduled.",
+      "source": "https://mlb.com/news/orioles-yankees-september-27-game-canceled-due-to-weather"
+    }
+  ],
+  "non_league_games": [
+    {
+      "id": 8712499,
+      "season": 2026,
+      "date": "2026-07-14",
+      "note": "2026 MLB All-Star Game in Philadelphia, American League 4, National League 0. The data source gives both sides a team id of -1."
+    }
+  ],
+  "official_records": [
+    {
+      "season": 2024,
+      "team_id": 8,
+      "wins": 92,
+      "losses": 69,
+      "source": "Final record as reported in news coverage; if this ever mismatches, check it against MLB.com standings before assuming the code is wrong."
+    },
+    {
+      "season": 2024,
+      "team_id": 11,
+      "wins": 88,
+      "losses": 73,
+      "source": "Final record as reported in news coverage; if this ever mismatches, check it against MLB.com standings before assuming the code is wrong."
+    },
+    {
+      "season": 2026,
+      "team_id": 3,
+      "wins": 79,
+      "losses": 82,
+      "source": "Final record as reported in news coverage; if this ever mismatches, check it against MLB.com standings before assuming the code is wrong."
+    },
+    {
+      "season": 2026,
+      "team_id": 19,
+      "wins": 93,
+      "losses": 68,
+      "source": "Final record as reported in news coverage; if this ever mismatches, check it against MLB.com standings before assuming the code is wrong."
+    }
+  ]
+}
