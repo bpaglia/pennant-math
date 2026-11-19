@@ -16,6 +16,10 @@ on:
         description: "Also replay past seasons to score the playoff-odds model (a few extra minutes)"
         type: boolean
         default: false
+      tune_noise:
+        description: "Also try several rating-uncertainty levels and compare them (several extra minutes)"
+        type: boolean
+        default: false
 
 # Lets the job save the fetched data back into the repository.
 permissions:
@@ -121,6 +125,16 @@ jobs:
         run: |
           python pipeline/odds.py --backtest $SEASONS --sims 2000 --step-days 7 | tee data/backtest_report.txt
 
+      - name: Tune rating uncertainty
+        id: tuning
+        if: steps.compute.outcome == 'success' && inputs.tune_noise
+        shell: bash
+        continue-on-error: true
+        env:
+          SEASONS: ${{ inputs.seasons }}
+        run: |
+          python pipeline/odds.py --tune-noise 0 10 20 30 40 50 --backtest $SEASONS --sims 1000 --step-days 14 | tee data/noise_tuning_report.txt
+
       - name: Show odds results on the run page
         if: steps.compute.outcome == 'success'
         shell: bash
@@ -134,6 +148,12 @@ jobs:
               echo "## Backtest"
               echo '```'
               cat data/backtest_report.txt
+              echo '```'
+            fi
+            if [ -f data/noise_tuning_report.txt ] && [ "${{ inputs.tune_noise }}" = "true" ]; then
+              echo "## Rating uncertainty tuning"
+              echo '```'
+              cat data/noise_tuning_report.txt
               echo '```'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
@@ -152,7 +172,7 @@ jobs:
           fi
 
       - name: Fail the run if validation or computing found problems
-        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure'
+        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure'
         shell: bash
         run: |
           echo "Validation or computing found problems. The data was saved so you can inspect it, but do not build on it yet."
