@@ -1,0 +1,4 @@
+2026 playoff odds as of 2026-09-27 (0 regular-season games left)
+  American: BOS 100%, CHW 100%, CLE 100%, HOU 100%, NYY 100%, TB 100%, BAL 0%, DET 0%
+  National: ATL 100%, CHC 100%, LAD 100%, MIL 100%, PHI 100%, SD 100%, ARI 0%, CIN 0%
+field check 2026: OK, the model's playoff field matches the teams that played in the postseason

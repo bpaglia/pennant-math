@@ -1,0 +1,24 @@
+field check 2023: OK
+field check 2024: OK
+field check 2025: OK
+field check 2026: OK
+Brier score, all dates (3060 team-dates): model 0.1253, in-position-now 0.185, constant 0.24 (lower is better)
+  more than 120 days left: model 0.1717, in-position-now 0.251, constant 0.24
+  60 to 120 days left: model 0.1272, in-position-now 0.198, constant 0.24
+  30 to 60 days left: model 0.091, in-position-now 0.1185, constant 0.24
+  30 days or fewer left: model 0.0612, in-position-now 0.0917, constant 0.24
+  2023: model 0.1073, constant 0.24
+  2024: model 0.1371, constant 0.24
+  2025: model 0.1514, constant 0.24
+  2026: model 0.1038, constant 0.24
+calibration (predicted vs. actual playoff rate):
+  0% to 10%: predicted 2%, actual 5% (n=1108)
+  10% to 20%: predicted 14%, actual 23% (n=277)
+  20% to 30%: predicted 25%, actual 30% (n=205)
+  30% to 40%: predicted 35%, actual 31% (n=144)
+  40% to 50%: predicted 45%, actual 47% (n=151)
+  50% to 60%: predicted 55%, actual 50% (n=134)
+  60% to 70%: predicted 65%, actual 63% (n=132)
+  70% to 80%: predicted 75%, actual 66% (n=150)
+  80% to 90%: predicted 85%, actual 67% (n=153)
+  90% to 100%: predicted 98%, actual 95% (n=605)

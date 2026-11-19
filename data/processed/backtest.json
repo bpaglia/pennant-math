@@ -1,0 +1,273 @@
+{
+ "field_check": {
+  "2023": {
+   "actual_postseason_teams": [
+    1,
+    2,
+    3,
+    11,
+    14,
+    15,
+    16,
+    17,
+    21,
+    27,
+    28,
+    29
+   ],
+   "differences": [],
+   "matches": true,
+   "model_field": [
+    1,
+    2,
+    3,
+    11,
+    14,
+    15,
+    16,
+    17,
+    21,
+    27,
+    28,
+    29
+   ]
+  },
+  "2024": {
+   "actual_postseason_teams": [
+    2,
+    3,
+    8,
+    10,
+    11,
+    12,
+    14,
+    16,
+    18,
+    19,
+    21,
+    23
+   ],
+   "differences": [],
+   "matches": true,
+   "model_field": [
+    2,
+    3,
+    8,
+    10,
+    11,
+    12,
+    14,
+    16,
+    18,
+    19,
+    21,
+    23
+   ]
+  },
+  "2025": {
+   "actual_postseason_teams": [
+    4,
+    5,
+    7,
+    8,
+    10,
+    14,
+    16,
+    19,
+    21,
+    23,
+    25,
+    29
+   ],
+   "differences": [],
+   "matches": true,
+   "model_field": [
+    4,
+    5,
+    7,
+    8,
+    10,
+    14,
+    16,
+    19,
+    21,
+    23,
+    25,
+    29
+   ]
+  },
+  "2026": {
+   "actual_postseason_teams": [
+    2,
+    4,
+    5,
+    6,
+    8,
+    11,
+    14,
+    16,
+    19,
+    21,
+    23,
+    27
+   ],
+   "differences": [],
+   "matches": true,
+   "model_field": [
+    2,
+    4,
+    5,
+    6,
+    8,
+    11,
+    14,
+    16,
+    19,
+    21,
+    23,
+    27
+   ]
+  }
+ },
+ "meta": {
+  "generated_at_utc": "2026-11-19T20:58:56Z",
+  "home_advantage": 24.0,
+  "n_sims": 2000,
+  "seasons": [
+   2023,
+   2024,
+   2025,
+   2026
+  ],
+  "seed": 12345,
+  "step_days": 7,
+  "tiebreaks": "head-to-head, then division record, then random"
+ },
+ "summary": {
+  "by_horizon": [
+   {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.251,
+    "brier_model": 0.1717,
+    "horizon": "more than 120 days left",
+    "n": 1020
+   },
+   {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.198,
+    "brier_model": 0.1272,
+    "horizon": "60 to 120 days left",
+    "n": 1020
+   },
+   {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.1185,
+    "brier_model": 0.091,
+    "horizon": "30 to 60 days left",
+    "n": 540
+   },
+   {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.0917,
+    "brier_model": 0.0612,
+    "horizon": "30 days or fewer left",
+    "n": 480
+   }
+  ],
+  "by_season": {
+   "2023": {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.16,
+    "brier_model": 0.1073,
+    "n": 750
+   },
+   "2024": {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.1769,
+    "brier_model": 0.1371,
+    "n": 780
+   },
+   "2025": {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.2154,
+    "brier_model": 0.1514,
+    "n": 780
+   },
+   "2026": {
+    "brier_constant": 0.24,
+    "brier_in_position_now": 0.1867,
+    "brier_model": 0.1038,
+    "n": 750
+   }
+  },
+  "calibration": [
+   {
+    "bin": "0% to 10%",
+    "mean_predicted": 0.018,
+    "n": 1108,
+    "observed_rate": 0.052
+   },
+   {
+    "bin": "10% to 20%",
+    "mean_predicted": 0.143,
+    "n": 277,
+    "observed_rate": 0.231
+   },
+   {
+    "bin": "20% to 30%",
+    "mean_predicted": 0.252,
+    "n": 205,
+    "observed_rate": 0.298
+   },
+   {
+    "bin": "30% to 40%",
+    "mean_predicted": 0.353,
+    "n": 144,
+    "observed_rate": 0.312
+   },
+   {
+    "bin": "40% to 50%",
+    "mean_predicted": 0.447,
+    "n": 151,
+    "observed_rate": 0.47
+   },
+   {
+    "bin": "50% to 60%",
+    "mean_predicted": 0.55,
+    "n": 134,
+    "observed_rate": 0.5
+   },
+   {
+    "bin": "60% to 70%",
+    "mean_predicted": 0.651,
+    "n": 132,
+    "observed_rate": 0.629
+   },
+   {
+    "bin": "70% to 80%",
+    "mean_predicted": 0.746,
+    "n": 150,
+    "observed_rate": 0.66
+   },
+   {
+    "bin": "80% to 90%",
+    "mean_predicted": 0.854,
+    "n": 153,
+    "observed_rate": 0.673
+   },
+   {
+    "bin": "90% to 100%",
+    "mean_predicted": 0.979,
+    "n": 605,
+    "observed_rate": 0.947
+   }
+  ],
+  "division_brier_model": 0.1035,
+  "overall": {
+   "brier_constant": 0.24,
+   "brier_in_position_now": 0.185,
+   "brier_model": 0.1253,
+   "n": 3060
+  }
+ }
+}
