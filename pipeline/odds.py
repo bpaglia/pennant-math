@@ -44,7 +44,10 @@ from validate import OPEN_STATES, is_league_game, load_raw
 
 DEFAULT_SIMS = 10_000
 DEFAULT_SEED = 12345
-DEFAULT_RATING_NOISE = 0.0     # Elo points; set from the tuning run (see --tune-noise)
+DEFAULT_RATING_NOISE = 30.0    # Elo points of uncertainty in each team's true strength. Chosen with
+                               # --tune-noise on the 2023-2026 backtest: lowest overall Brier score,
+                               # calibration error roughly halved, and it helps 2024 and 2025 without
+                               # hurting 2026. Revisit when more seasons are added.
 CHUNK_SIZE = 500
 DIVISION_WINNERS = 3
 WILD_CARDS = 3
