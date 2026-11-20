@@ -44,6 +44,12 @@ Elo starting values are K = 4, home advantage = 24 points, and a one-third pull 
 
 `compute.py` also stops with an error if it finds an impossible total (wins not equal to losses, runs scored not equal to runs allowed), or if a computed record does not match a verified official record listed under `official_records` in `data/known_cancellations.json`.
 
+## Pennant Score (score.py)
+
+`python pipeline/score.py` turns the standings, Elo ratings, and playoff odds into one 0 to 100 grade per team: Results 30% (run differential per game), Underlying 45% (Elo and expected win%), Outlook 25% (playoff odds and remaining schedule). Each part is a percentile among the 30 teams. Outlook exists only in a season in progress; when it is missing the other two are reweighted. Writes `scores.json`. The weights are starting values to tune later.
+
+compute.py also records, per team: home and road run differential, record against teams above .500, schedule played so far (average opponent rating), and a one-run-record flag (`one_run_z`, a z-score against an even record; beyond about 1.5 the page shows an arrow).
+
 ## Playoff odds (odds.py)
 
 ```
