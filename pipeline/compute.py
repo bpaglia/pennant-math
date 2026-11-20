@@ -81,6 +81,7 @@ def _blank_stats() -> dict:
         "wins": 0, "losses": 0, "rs": 0, "ra": 0,
         "one_run_w": 0, "one_run_l": 0, "extra_w": 0, "extra_l": 0,
         "home_w": 0, "home_l": 0, "road_w": 0, "road_l": 0, "remaining": 0,
+        "home_rs": 0, "home_ra": 0, "road_rs": 0, "road_ra": 0,
     }
 
 
@@ -119,6 +120,8 @@ def compute_standings(season_games: list, teams: list) -> dict:
             row["ra"] += allowed
             row["wins" if won else "losses"] += 1
             where = "home" if at_home else "road"
+            row[f"{where}_rs"] += scored
+            row[f"{where}_ra"] += allowed
             row[f"{where}_{'w' if won else 'l'}"] += 1
             if margin == 1:
                 row["one_run_w" if won else "one_run_l"] += 1
@@ -130,6 +133,7 @@ def compute_standings(season_games: list, teams: list) -> dict:
         s = stats[team["id"]]
         games = s["wins"] + s["losses"]
         run_diff = s["rs"] - s["ra"]
+        close = s["one_run_w"] + s["one_run_l"]
         row = {
             "team_id": team["id"],
             "abbreviation": team["abbreviation"],
@@ -151,6 +155,8 @@ def compute_standings(season_games: list, teams: list) -> dict:
             "extra_wins": s["extra_w"], "extra_losses": s["extra_l"],
             "home_wins": s["home_w"], "home_losses": s["home_l"],
             "road_wins": s["road_w"], "road_losses": s["road_l"],
+            "home_run_diff": s["home_rs"] - s["home_ra"], "road_run_diff": s["road_rs"] - s["road_ra"],
+            "one_run_z": round((s["one_run_w"] - close / 2) / math.sqrt(close / 4), 2) if close else None,
             "games_remaining": s["remaining"],
         }
         if games:
@@ -160,6 +166,7 @@ def compute_standings(season_games: list, teams: list) -> dict:
             row["luck"] = round(s["wins"] - pyth * games, 2)
         rows.append(row)
 
+    _add_record_vs_winning(rows, season_games, team_ids)
     _add_division_ranks(rows)
     total_remaining = sum(row["games_remaining"] for row in rows)
     return {
@@ -167,6 +174,45 @@ def compute_standings(season_games: list, teams: list) -> dict:
         "as_of": last_date,
         "complete": bool(last_date) and total_remaining == 0,
     }
+
+
+def _add_record_vs_winning(rows: list, season_games: list, team_ids: set) -> None:
+    """Record against opponents whose winning percentage is above .500 (as of the latest game)."""
+    winners = {row["team_id"] for row in rows if row["win_pct"] and row["win_pct"] > 0.5}
+    record = {team_id: [0, 0] for team_id in team_ids}
+    for game in season_games:
+        if game.get("season_type") != "regular" or game.get("status_state") != "final" or not is_league_game(game, team_ids):
+            continue
+        home_runs, away_runs = game.get("home_runs"), game.get("away_runs")
+        if not isinstance(home_runs, int) or not isinstance(away_runs, int):
+            continue
+        for me, opponent, won in ((game["home_team_id"], game["away_team_id"], home_runs > away_runs),
+                                  (game["away_team_id"], game["home_team_id"], away_runs > home_runs)):
+            if opponent in winners:
+                record[me][0 if won else 1] += 1
+    for row in rows:
+        row["vs_winning_wins"], row["vs_winning_losses"] = record[row["team_id"]]
+
+
+def add_sos_played(standings: dict, season_games: list, end_ratings: dict, team_ids: set) -> None:
+    """Average strength of the opponents already faced, relative to the league average.
+
+    Opponent strength uses each team's latest rating, so it describes how tough the
+    opponents are now. Positive means a harder schedule so far.
+    """
+    mean = sum(end_ratings.values()) / len(end_ratings)
+    total, count = defaultdict(float), defaultdict(int)
+    for game in league_final_games(season_games, team_ids):
+        if game.get("season_type") != "regular":
+            continue
+        home, away = game["home_team_id"], game["away_team_id"]
+        total[home] += end_ratings[str(away)]
+        total[away] += end_ratings[str(home)]
+        count[home] += 1
+        count[away] += 1
+    for row in standings["teams"]:
+        n = count[row["team_id"]]
+        row["sos_played"] = round(total[row["team_id"]] / n - mean, 1) if n else None
 
 
 def _add_division_ranks(rows: list) -> None:
@@ -409,6 +455,9 @@ def main(argv=None) -> int:
     elo = run_elo(games_by_season, team_ids, {
         "k": args.k, "home_advantage": args.home_advantage, "carry": args.carry,
     })
+
+    for season, standings in standings_by_season.items():
+        add_sos_played(standings, games_by_season[int(season)], elo["seasons"][season]["end"], team_ids)
 
     meta = {"generated_at_utc": generated, "source": "balldontlie",
             "pythagenpat_exponent": PYTHAGENPAT_EXPONENT}
