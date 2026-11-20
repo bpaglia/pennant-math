@@ -291,10 +291,18 @@ class RatingNoiseTest(unittest.TestCase):
     def setUp(self):
         self.state = odds.SeasonState(TEAMS, complete_season(), "2025-01-01")
 
-    def test_zero_noise_is_the_same_as_the_default(self):
+    def test_default_uses_the_tuned_noise_level(self):
+        self.assertEqual(odds.DEFAULT_RATING_NOISE, 30.0)
         a = odds.simulate(self.state, EQUAL, n_sims=300, seed=5)
-        b = odds.simulate(self.state, EQUAL, n_sims=300, seed=5, rating_noise=0.0)
+        b = odds.simulate(self.state, EQUAL, n_sims=300, seed=5, rating_noise=odds.DEFAULT_RATING_NOISE)
         self.assertTrue(np.array_equal(a["p_playoffs"], b["p_playoffs"]))
+
+    def test_zero_noise_turns_the_uncertainty_off(self):
+        ratings = dict(EQUAL)
+        ratings[1] = 1600.0
+        sharp = odds.simulate(self.state, ratings, n_sims=2000, seed=5, rating_noise=0.0)
+        default = odds.simulate(self.state, ratings, n_sims=2000, seed=5)
+        self.assertGreater(sharp["p_playoffs"][0], default["p_playoffs"][0])   # a 1600 team looks surer with no noise
 
     def test_equal_teams_stay_equal_and_the_field_size_holds(self):
         result = odds.simulate(self.state, EQUAL, n_sims=2000, seed=6, rating_noise=40.0)
