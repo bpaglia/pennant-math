@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pennant Math</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--ink:#1b2430;--mut:#667085;--line:#e3e7ee;--bg:#f6f8fb;--card:#fff;--navy:#1E3A8A}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+header{background:var(--navy);color:#fff;padding:14px 20px}header h1{margin:0;font-size:22px}header p{margin:2px 0 0;opacity:.8;font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:16px}section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:17px}.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,button,summary{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+details{position:relative}details[open] .pick{display:grid}.pick{display:none;position:absolute;z-index:5;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 14px;width:min(640px,90vw);max-height:60vh;overflow:auto;box-shadow:0 8px 24px #0002}
+.pick h4{grid-column:1/-1;margin:8px 0 2px;font-size:12px;color:var(--mut)}.pick label{font-size:13px;white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.card{border:1px solid var(--line);border-left:5px solid var(--c);border-radius:8px;padding:10px}
+.card b{font-size:16px}.card dl{display:grid;grid-template-columns:auto auto;gap:2px 10px;margin:6px 0 0;font-size:13px}.card dt{color:var(--mut)}.card dd{margin:0;text-align:right}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.cv{position:relative;height:340px}.tall{height:640px}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}tr.grp td{background:var(--bg);font-weight:600;text-align:left}
+.note{color:var(--mut);font-size:12.5px;margin:8px 0 0}.pos{color:#157347}.neg{color:#b42318}#msg{padding:16px;color:#b42318}
+</style>
+</head>
+<body>
+<header><h1>Pennant Math</h1><p id="asof">Loading…</p></header>
+<main>
+<section><div class="bar">
+ <label>Season <select id="season"></select></label>
+ <details><summary id="pickSum">Pick your teams</summary><div class="pick" id="pick"></div></details>
+ <button id="clear">Clear</button><button id="share">Copy share link</button><span id="copied" class="note"></span>
+</div><p class="note">Pick any teams you follow. Your choice is saved in the page address, so you can bookmark or share it.</p></section>
+<div id="msg"></div>
+<section id="mine" hidden><h2>My teams</h2><div class="cards" id="cards"></div></section>
+<div class="grid">
+ <section><h2>Record vs. true talent</h2><div class="cv"><canvas id="scatter"></canvas></div>
+ <p class="note">Each dot is a team: expected win% (from runs scored and allowed) across, actual win% up. Above the line means a team won more than its runs say it should have: luck.</p></section>
+ <section><h2>Momentum</h2><div class="cv"><canvas id="momentum"></canvas></div>
+ <p class="note">Run differential over each team's last 30 games. Shows your teams, or the top three if none are picked.</p></section>
+</div>
+<section><h2>Standings</h2><div class="bar"><select id="view"><option value="division">By division</option><option value="league">By league</option><option value="overall">Overall</option></select>
+<label><input type="checkbox" id="only"> Selected teams only</label></div><div class="scroll"><table id="tbl"></table></div>
+<p class="note">Luck = actual wins minus expected wins. Elo is an opponent-adjusted strength rating (1500 is average). Click a column to sort.</p></section>
+<div class="grid">
+ <section id="oddsA"><h2>Playoff odds</h2><div class="cv tall"><canvas id="oddsBar"></canvas></div><p class="note" id="oddsNote"></p></section>
+ <section id="oddsB"><h2>Playoff odds over the season</h2><div class="cv"><canvas id="oddsLine"></canvas></div>
+ <p class="note">Odds come from simulating the rest of the season 10,000 times using Elo ratings. Backtested on 2023 to 2026.</p></section>
+</div>
+<p class="note">Game data from BALLDONTLIE. Pennant Math is an independent fan project and is not affiliated with or endorsed by Major League Baseball or any team.</p>
+</main>
+<script>
+const $=s=>document.querySelector(s),PAL=['#1f77b4','#d62728','#2ca02c','#ff7f0e','#9467bd','#8c564b'],GREY='#b9c0cc';
+const D={},CH={};let sel=[],season,sortKey='win_pct',sortDir=-1;
+const pct=x=>x==null?'–':(x*100).toFixed(0)+'%',f1=x=>x==null?'–':(x>0?'+':'')+x.toFixed(1),col=a=>PAL[sel.indexOf(a)%PAL.length];
+function mk(id,cfg){CH[id]&&CH[id].destroy();CH[id]=new Chart($('#'+id),cfg)}
+const rows=()=>D.standings.seasons[season].teams;
+const oddsRow=t=>D.odds&&D.odds.meta.season==season?D.odds.teams.find(o=>o.team_id==t.team_id):null;
+const elo=t=>{const e=D.elo&&D.elo.seasons[season];return e?e.end[t.team_id]:null};
+function chosen(){const r=rows();let c=r.filter(t=>sel.includes(t.abbreviation));return c.length?c:[...r].sort((a,b)=>b.run_diff-a.run_diff).slice(0,3)}
+function save(){const p=new URLSearchParams();if(sel.length)p.set('teams',sel.join(','));p.set('season',season);history.replaceState(null,'','?'+p);try{localStorage.setItem('pm_teams',sel.join(','))}catch(e){}}
+function render(){save();$('#pickSum').textContent=sel.length?sel.join(', '):'Pick your teams';
+ $('#asof').textContent=`Season ${season} · through ${D.standings.seasons[season].as_of}${D.standings.seasons[season].complete?' (final)':''}`;
+ cards();scatter();table();momentum();odds()}
+function cards(){const m=rows().filter(t=>sel.includes(t.abbreviation));$('#mine').hidden=!m.length;
+ $('#cards').innerHTML=m.map(t=>{const o=oddsRow(t),e=elo(t),od=o?(o.p_playoffs>=.9995?'In':o.p_playoffs<=.0005?'Out':pct(o.p_playoffs)):'–';
+ const r=['th','st','nd','rd'];return `<div class="card" style="--c:${col(t.abbreviation)}"><b>${t.name}</b><dl><dt>Record</dt><dd>${t.wins}-${t.losses}</dd>
+ <dt>${t.league==='American'?'AL':'NL'} ${t.division}</dt><dd>#${t.division_rank}${t.games_back?`, ${t.games_back} GB`:''}</dd><dt>Run differential</dt><dd>${f1(t.run_diff)}</dd>
+ <dt>Luck (wins)</dt><dd>${f1(t.luck)}</dd><dt>Elo</dt><dd>${e==null?'–':e.toFixed(0)}</dd><dt>Playoffs</dt><dd>${od}</dd></dl></div>`}).join('')}
+function scatter(){const r=rows().filter(t=>t.games),xs=r.map(t=>t.pyth_win_pct),lo=Math.min(...xs,...r.map(t=>t.win_pct))-.02,hi=Math.max(...xs,...r.map(t=>t.win_pct))+.02;
+ const pt=t=>({x:t.pyth_win_pct,y:t.win_pct,a:t.abbreviation});
+ mk('scatter',{type:'scatter',data:{datasets:[{data:r.filter(t=>!sel.includes(t.abbreviation)).map(pt),backgroundColor:GREY,pointRadius:4},
+ ...r.filter(t=>sel.includes(t.abbreviation)).map(t=>({data:[pt(t)],backgroundColor:col(t.abbreviation),pointRadius:8})),
+ {type:'line',data:[{x:lo,y:lo},{x:hi,y:hi}],borderColor:'#667085',borderDash:[5,5],pointRadius:0,borderWidth:1}]},
+ options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.a?`${c.raw.a}: expected ${(c.raw.x*100).toFixed(1)}%, actual ${(c.raw.y*100).toFixed(1)}%`:''}}},
+ scales:{x:{min:lo,max:hi,title:{display:true,text:'Expected win %'},ticks:{callback:v=>(v*100).toFixed(0)+'%'}},y:{min:lo,max:hi,title:{display:true,text:'Actual win %'},ticks:{callback:v=>(v*100).toFixed(0)+'%'}}}}})}
+function table(){const v=$('#view').value,only=$('#only').checked,hasO=D.odds&&D.odds.meta.season==season;
+ const cols=[['name','Team'],['wins','W'],['losses','L'],['win_pct','Win%'],['run_diff','RD'],['pyth_wins','Exp W'],['luck','Luck'],['elo','Elo']];if(hasO)cols.push(['po','Playoff%']);
+ const val=(t,k)=>k==='elo'?elo(t):k==='po'?(oddsRow(t)||{}).p_playoffs:t[k];
+ let r=rows().map(t=>t);if(only)r=r.filter(t=>sel.includes(t.abbreviation));
+ const cmp=(a,b)=>{const x=val(a,sortKey),y=val(b,sortKey);return (typeof x==='string'?x.localeCompare(y):(x??-1e9)-(y??-1e9))*sortDir};
+ const key=t=>v==='division'?`${t.league==='American'?'AL':'NL'} ${t.division}`:v==='league'?`${t.league} League`:'';
+ const groups=[...new Set(r.map(key))].sort(),line=t=>`<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td><td>${t.wins}</td><td>${t.losses}</td><td>${t.win_pct==null?'–':t.win_pct.toFixed(3)}</td>
+ <td class="${t.run_diff>=0?'pos':'neg'}">${f1(t.run_diff)}</td><td>${t.pyth_wins==null?'–':t.pyth_wins.toFixed(1)}</td><td class="${t.luck>=0?'pos':'neg'}">${f1(t.luck)}</td><td>${elo(t)==null?'–':elo(t).toFixed(0)}</td>${hasO?`<td>${pct((oddsRow(t)||{}).p_playoffs)}</td>`:''}</tr>`;
+ $('#tbl').innerHTML=`<tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]}${c[0]===sortKey?(sortDir<0?' ▼':' ▲'):''}</th>`).join('')}</tr>`+
+ groups.map(g=>(g?`<tr class="grp"><td colspan="${cols.length}">${g}</td></tr>`:'')+r.filter(t=>key(t)===g).sort(cmp).map(line).join('')).join('');
+ document.querySelectorAll('th').forEach(h=>h.onclick=()=>{const k=h.dataset.k;sortDir=k===sortKey?-sortDir:(k==='name'?1:-1);sortKey=k;table()})}
+function momentum(){const R=D.rolling_rd&&D.rolling_rd.seasons[season];if(!R)return;const c=chosen();
+ mk('momentum',{type:'line',data:{labels:Array.from({length:Math.max(...c.map(t=>(R[t.team_id]||[]).length))},(_,i)=>i+1),
+ datasets:c.map((t,i)=>({label:t.abbreviation,data:(R[t.team_id]||[]).map(e=>e[2]),borderColor:sel.length?col(t.abbreviation):PAL[i],pointRadius:0,borderWidth:2,tension:.2}))},
+ options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{title:{display:true,text:'Game number'},ticks:{maxTicksLimit:10}},y:{title:{display:true,text:'Run differential, last 30 games'}}}}})}
+function odds(){const has=D.odds&&D.odds.meta.season==season;$('#oddsA').hidden=!has;if(has){const o=[...D.odds.teams].sort((a,b)=>b.p_playoffs-a.p_playoffs);
+ mk('oddsBar',{type:'bar',data:{labels:o.map(t=>t.abbreviation),datasets:[{data:o.map(t=>t.p_playoffs),backgroundColor:o.map(t=>sel.includes(t.abbreviation)?col(t.abbreviation):GREY)}]},
+ options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:1,ticks:{callback:v=>pct(v)}}}}});$('#oddsNote').textContent=`As of ${D.odds.meta.as_of}.`}
+ const H=D.odds_history&&D.odds_history.seasons[season];$('#oddsB').hidden=!H;if(!H)return;const c=chosen().filter(t=>H.p_playoffs[t.team_id]);
+ mk('oddsLine',{type:'line',data:{labels:H.dates,datasets:c.map((t,i)=>({label:t.abbreviation,data:H.p_playoffs[t.team_id],borderColor:sel.length?col(t.abbreviation):PAL[i],pointRadius:2,borderWidth:2,tension:.2}))},
+ options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{y:{min:0,max:1,ticks:{callback:v=>pct(v)}},x:{ticks:{maxTicksLimit:8}}}}})}
+function picker(){const g={};rows().forEach(t=>(g[`${t.league==='American'?'AL':'NL'} ${t.division}`]??=[]).push(t));
+ $('#pick').innerHTML=Object.keys(g).sort().map(k=>`<h4>${k}</h4>`+g[k].map(t=>`<label><input type="checkbox" value="${t.abbreviation}" ${sel.includes(t.abbreviation)?'checked':''}> ${t.name}</label>`).join('')).join('');
+ $('#pick').onchange=e=>{sel=[...document.querySelectorAll('#pick input:checked')].map(i=>i.value);render()}}
+async function init(){for(const n of ['standings','rolling_rd','elo','odds','odds_history']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
+ if(!D.standings){$('#msg').textContent='Data files not found. Run the GitHub workflow, then reload.';$('#asof').textContent='';return}
+ const ss=Object.keys(D.standings.seasons).sort(),p=new URLSearchParams(location.search);season=ss.includes(p.get('season'))?p.get('season'):ss[ss.length-1];
+ $('#season').innerHTML=ss.map(s=>`<option ${s===season?'selected':''}>${s}</option>`).join('');
+ let t=p.get('teams');if(t==null){try{t=localStorage.getItem('pm_teams')||''}catch(e){t=''}}
+ const valid=new Set(rows().map(x=>x.abbreviation));sel=t.split(',').filter(a=>valid.has(a));
+ $('#season').onchange=e=>{season=e.target.value;picker();render()};$('#view').onchange=table;$('#only').onchange=table;
+ $('#clear').onclick=()=>{sel=[];picker();render()};
+ $('#share').onclick=async()=>{save();try{await navigator.clipboard.writeText(location.href);$('#copied').textContent='Link copied'}catch(e){$('#copied').textContent=location.href}setTimeout(()=>$('#copied').textContent='',3000)};
+ picker();render()}
+init();
+</script>
+</body>
+</html>
