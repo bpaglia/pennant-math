@@ -158,12 +158,19 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Copy data for the website
+        if: steps.compute.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p docs/data
+          cp data/processed/*.json docs/data/
+
       - name: Save data to the repository
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data
+          git add data docs
           if git diff --cached --quiet; then
             echo "No new data to save."
           else
