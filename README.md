@@ -66,6 +66,12 @@ As of a date, games already played are fixed and every later regular-season game
 
 The default is **30 points**, chosen on the 2023 to 2026 backtest. Compared with no noise, it lowers the overall Brier score (0.1262 to 0.1228), roughly halves the calibration error (0.058 to 0.029), and clearly helps 2024 and 2025. It is flat for 2026 and slightly worse for 2023, which is the warm-up season. The best level looks lower in later seasons, as the ratings accumulate more history, so revisit this after adding earlier seasons.
 
+## The website (docs/)
+
+`docs/index.html` is the whole site: one page that reads the JSON files in `docs/data/`, which the workflow refreshes on every run. It has a team picker (your choice is saved in the page address, so a link shares your view), My Teams cards, a record-versus-true-talent chart, a momentum chart, a sortable standings table, and playoff-odds charts. Charts use Chart.js 4.4.1 from cdnjs.
+
+To publish it: in the repository, open Settings, then Pages, set the source to **Deploy from a branch**, choose branch **main** and folder **/docs**, and save. The site appears at `https://YOUR-USERNAME.github.io/pennant-math/` after a minute or two. Nothing needs installing.
+
 ## Running without installing Python (GitHub, in the browser)
 
 If you cannot install Python, GitHub can run everything for you:
