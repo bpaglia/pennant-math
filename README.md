@@ -64,6 +64,8 @@ As of a date, games already played are fixed and every later regular-season game
 
 **Rating uncertainty.** An Elo rating is an estimate of a team's strength, not the truth. By default every simulation uses the ratings exactly, which tends to make favorites and long shots look too certain. `--rating-noise POINTS` gives each simulated season its own version of every team's strength, drawn around its rating with that spread, which pulls the extremes back toward reality. Find the right spread by running `--tune-noise 0 10 20 30 40 50` (or tick **tune_noise** in the workflow): it backtests each level and prints Brier score and calibration error side by side. Pick the level with the best scores that also improves most seasons, then set `DEFAULT_RATING_NOISE` in `pipeline/odds.py`. With only a few seasons of data, prefer a modest value over the single best one.
 
+The default is **30 points**, chosen on the 2023 to 2026 backtest. Compared with no noise, it lowers the overall Brier score (0.1262 to 0.1228), roughly halves the calibration error (0.058 to 0.029), and clearly helps 2024 and 2025. It is flat for 2026 and slightly worse for 2023, which is the warm-up season. The best level looks lower in later seasons, as the ratings accumulate more history, so revisit this after adding earlier seasons.
+
 ## Running without installing Python (GitHub, in the browser)
 
 If you cannot install Python, GitHub can run everything for you:
@@ -111,4 +113,3 @@ The tests use a local mock server and synthetic data, so they need no network ac
 1. Tune Elo (K, home advantage, preseason projections) using the backtest.
 2. The page: standings table, record-vs-true-talent chart, and playoff-odds charts.
 3. The scheduled daily refresh.
-
