@@ -135,6 +135,14 @@ jobs:
         run: |
           python pipeline/odds.py --tune-noise 0 10 20 30 40 50 --backtest $SEASONS --sims 1000 --step-days 14 | tee data/noise_tuning_report.txt
 
+      - name: Pennant Score
+        id: score
+        if: steps.compute.outcome == 'success'
+        shell: bash
+        continue-on-error: true
+        run: |
+          python pipeline/score.py | tee data/score_report.txt
+
       - name: Show odds results on the run page
         if: steps.compute.outcome == 'success'
         shell: bash
@@ -179,7 +187,7 @@ jobs:
           fi
 
       - name: Fail the run if validation or computing found problems
-        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure'
+        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure' || steps.score.outcome == 'failure'
         shell: bash
         run: |
           echo "Validation or computing found problems. The data was saved so you can inspect it, but do not build on it yet."
