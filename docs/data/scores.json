@@ -1,0 +1,740 @@
+{
+ "meta": {
+  "generated_at_utc": "2026-11-20T20:13:13Z",
+  "weights": {
+   "outlook": 0.25,
+   "results": 0.3,
+   "underlying": 0.45
+  }
+ },
+ "seasons": {
+  "2023": {
+   "1": {
+    "outlook": null,
+    "results": 48.3,
+    "score": 50.8,
+    "underlying": 52.4
+   },
+   "10": {
+    "outlook": null,
+    "results": 27.6,
+    "score": 30.1,
+    "underlying": 31.7
+   },
+   "11": {
+    "outlook": null,
+    "results": 84.5,
+    "score": 82.2,
+    "underlying": 80.7
+   },
+   "12": {
+    "outlook": null,
+    "results": 10.3,
+    "score": 10.3,
+    "underlying": 10.3
+   },
+   "13": {
+    "outlook": null,
+    "results": 24.1,
+    "score": 21.7,
+    "underlying": 20.0
+   },
+   "14": {
+    "outlook": null,
+    "results": 96.6,
+    "score": 96.6,
+    "underlying": 96.6
+   },
+   "15": {
+    "outlook": null,
+    "results": 31.0,
+    "score": 36.0,
+    "underlying": 39.3
+   },
+   "16": {
+    "outlook": null,
+    "results": 63.8,
+    "score": 68.6,
+    "underlying": 71.7
+   },
+   "17": {
+    "outlook": null,
+    "results": 79.3,
+    "score": 75.6,
+    "underlying": 73.1
+   },
+   "18": {
+    "outlook": null,
+    "results": 51.7,
+    "score": 51.7,
+    "underlying": 51.7
+   },
+   "19": {
+    "outlook": null,
+    "results": 44.8,
+    "score": 46.1,
+    "underlying": 46.9
+   },
+   "2": {
+    "outlook": null,
+    "results": 100.0,
+    "score": 100.0,
+    "underlying": 100.0
+   },
+   "20": {
+    "outlook": null,
+    "results": 0.0,
+    "score": 0.0,
+    "underlying": 0.0
+   },
+   "21": {
+    "outlook": null,
+    "results": 63.8,
+    "score": 71.4,
+    "underlying": 76.6
+   },
+   "22": {
+    "outlook": null,
+    "results": 20.7,
+    "score": 21.9,
+    "underlying": 22.8
+   },
+   "23": {
+    "outlook": null,
+    "results": 75.9,
+    "score": 74.6,
+    "underlying": 73.8
+   },
+   "24": {
+    "outlook": null,
+    "results": 34.5,
+    "score": 32.0,
+    "underlying": 30.3
+   },
+   "25": {
+    "outlook": null,
+    "results": 72.4,
+    "score": 69.9,
+    "underlying": 68.3
+   },
+   "26": {
+    "outlook": null,
+    "results": 17.2,
+    "score": 18.5,
+    "underlying": 19.3
+   },
+   "27": {
+    "outlook": null,
+    "results": 93.1,
+    "score": 91.9,
+    "underlying": 91.0
+   },
+   "28": {
+    "outlook": null,
+    "results": 89.7,
+    "score": 90.9,
+    "underlying": 91.7
+   },
+   "29": {
+    "outlook": null,
+    "results": 58.6,
+    "score": 59.9,
+    "underlying": 60.7
+   },
+   "3": {
+    "outlook": null,
+    "results": 84.5,
+    "score": 84.3,
+    "underlying": 84.1
+   },
+   "30": {
+    "outlook": null,
+    "results": 13.8,
+    "score": 13.8,
+    "underlying": 13.8
+   },
+   "4": {
+    "outlook": null,
+    "results": 55.2,
+    "score": 50.2,
+    "underlying": 46.9
+   },
+   "5": {
+    "outlook": null,
+    "results": 69.0,
+    "score": 65.2,
+    "underlying": 62.8
+   },
+   "6": {
+    "outlook": null,
+    "results": 6.9,
+    "score": 5.7,
+    "underlying": 4.8
+   },
+   "7": {
+    "outlook": null,
+    "results": 37.9,
+    "score": 38.8,
+    "underlying": 39.3
+   },
+   "8": {
+    "outlook": null,
+    "results": 41.4,
+    "score": 36.8,
+    "underlying": 33.8
+   },
+   "9": {
+    "outlook": null,
+    "results": 3.4,
+    "score": 4.7,
+    "underlying": 5.5
+   }
+  },
+  "2024": {
+   "1": {
+    "outlook": null,
+    "results": 86.2,
+    "score": 79.6,
+    "underlying": 75.2
+   },
+   "10": {
+    "outlook": null,
+    "results": 51.7,
+    "score": 54.2,
+    "underlying": 55.9
+   },
+   "11": {
+    "outlook": null,
+    "results": 79.3,
+    "score": 81.8,
+    "underlying": 83.4
+   },
+   "12": {
+    "outlook": null,
+    "results": 74.1,
+    "score": 68.1,
+    "underlying": 64.1
+   },
+   "13": {
+    "outlook": null,
+    "results": 10.3,
+    "score": 9.1,
+    "underlying": 8.3
+   },
+   "14": {
+    "outlook": null,
+    "results": 100.0,
+    "score": 100.0,
+    "underlying": 100.0
+   },
+   "15": {
+    "outlook": null,
+    "results": 6.9,
+    "score": 9.4,
+    "underlying": 11.0
+   },
+   "16": {
+    "outlook": null,
+    "results": 93.1,
+    "score": 93.1,
+    "underlying": 93.1
+   },
+   "17": {
+    "outlook": null,
+    "results": 48.3,
+    "score": 42.1,
+    "underlying": 37.9
+   },
+   "18": {
+    "outlook": null,
+    "results": 62.1,
+    "score": 66.2,
+    "underlying": 69.0
+   },
+   "19": {
+    "outlook": null,
+    "results": 96.6,
+    "score": 91.6,
+    "underlying": 88.3
+   },
+   "2": {
+    "outlook": null,
+    "results": 82.8,
+    "score": 86.1,
+    "underlying": 88.3
+   },
+   "20": {
+    "outlook": null,
+    "results": 13.8,
+    "score": 12.6,
+    "underlying": 11.7
+   },
+   "21": {
+    "outlook": null,
+    "results": 89.7,
+    "score": 83.4,
+    "underlying": 79.3
+   },
+   "22": {
+    "outlook": null,
+    "results": 20.7,
+    "score": 20.7,
+    "underlying": 20.7
+   },
+   "23": {
+    "outlook": null,
+    "results": 74.1,
+    "score": 81.8,
+    "underlying": 86.9
+   },
+   "24": {
+    "outlook": null,
+    "results": 37.9,
+    "score": 40.4,
+    "underlying": 42.1
+   },
+   "25": {
+    "outlook": null,
+    "results": 58.6,
+    "score": 63.2,
+    "underlying": 66.2
+   },
+   "26": {
+    "outlook": null,
+    "results": 34.5,
+    "score": 37.0,
+    "underlying": 38.6
+   },
+   "27": {
+    "outlook": null,
+    "results": 27.6,
+    "score": 35.0,
+    "underlying": 40.0
+   },
+   "28": {
+    "outlook": null,
+    "results": 31.0,
+    "score": 29.8,
+    "underlying": 29.0
+   },
+   "29": {
+    "outlook": null,
+    "results": 24.1,
+    "score": 24.1,
+    "underlying": 24.1
+   },
+   "3": {
+    "outlook": null,
+    "results": 65.5,
+    "score": 64.3,
+    "underlying": 63.4
+   },
+   "30": {
+    "outlook": null,
+    "results": 17.2,
+    "score": 17.2,
+    "underlying": 17.2
+   },
+   "4": {
+    "outlook": null,
+    "results": 41.4,
+    "score": 38.9,
+    "underlying": 37.2
+   },
+   "5": {
+    "outlook": null,
+    "results": 55.2,
+    "score": 58.9,
+    "underlying": 61.4
+   },
+   "6": {
+    "outlook": null,
+    "results": 0.0,
+    "score": 0.0,
+    "underlying": 0.0
+   },
+   "7": {
+    "outlook": null,
+    "results": 44.8,
+    "score": 42.3,
+    "underlying": 40.7
+   },
+   "8": {
+    "outlook": null,
+    "results": 69.0,
+    "score": 65.7,
+    "underlying": 63.4
+   },
+   "9": {
+    "outlook": null,
+    "results": 3.4,
+    "score": 3.4,
+    "underlying": 3.4
+   }
+  },
+  "2025": {
+   "1": {
+    "outlook": null,
+    "results": 41.4,
+    "score": 45.1,
+    "underlying": 47.6
+   },
+   "10": {
+    "outlook": null,
+    "results": 65.5,
+    "score": 55.6,
+    "underlying": 49.0
+   },
+   "11": {
+    "outlook": null,
+    "results": 50.0,
+    "score": 52.3,
+    "underlying": 53.8
+   },
+   "12": {
+    "outlook": null,
+    "results": 44.8,
+    "score": 49.8,
+    "underlying": 53.1
+   },
+   "13": {
+    "outlook": null,
+    "results": 6.9,
+    "score": 6.9,
+    "underlying": 6.9
+   },
+   "14": {
+    "outlook": null,
+    "results": 89.7,
+    "score": 93.4,
+    "underlying": 95.9
+   },
+   "15": {
+    "outlook": null,
+    "results": 20.7,
+    "score": 21.9,
+    "underlying": 22.8
+   },
+   "16": {
+    "outlook": null,
+    "results": 100.0,
+    "score": 98.8,
+    "underlying": 97.9
+   },
+   "17": {
+    "outlook": null,
+    "results": 15.5,
+    "score": 15.3,
+    "underlying": 15.2
+   },
+   "18": {
+    "outlook": null,
+    "results": 62.1,
+    "score": 62.1,
+    "underlying": 62.1
+   },
+   "19": {
+    "outlook": null,
+    "results": 96.6,
+    "score": 94.1,
+    "underlying": 92.4
+   },
+   "2": {
+    "outlook": null,
+    "results": 34.5,
+    "score": 39.4,
+    "underlying": 42.8
+   },
+   "20": {
+    "outlook": null,
+    "results": 24.1,
+    "score": 26.6,
+    "underlying": 28.3
+   },
+   "21": {
+    "outlook": null,
+    "results": 86.2,
+    "score": 88.7,
+    "underlying": 90.3
+   },
+   "22": {
+    "outlook": null,
+    "results": 31.0,
+    "score": 26.5,
+    "underlying": 23.4
+   },
+   "23": {
+    "outlook": null,
+    "results": 79.3,
+    "score": 78.1,
+    "underlying": 77.2
+   },
+   "24": {
+    "outlook": null,
+    "results": 50.0,
+    "score": 46.5,
+    "underlying": 44.1
+   },
+   "25": {
+    "outlook": null,
+    "results": 69.0,
+    "score": 70.2,
+    "underlying": 71.0
+   },
+   "26": {
+    "outlook": null,
+    "results": 27.6,
+    "score": 24.7,
+    "underlying": 22.8
+   },
+   "27": {
+    "outlook": null,
+    "results": 55.2,
+    "score": 47.7,
+    "underlying": 42.8
+   },
+   "28": {
+    "outlook": null,
+    "results": 75.9,
+    "score": 72.1,
+    "underlying": 69.7
+   },
+   "29": {
+    "outlook": null,
+    "results": 72.4,
+    "score": 77.4,
+    "underlying": 80.7
+   },
+   "3": {
+    "outlook": null,
+    "results": 10.3,
+    "score": 16.6,
+    "underlying": 20.7
+   },
+   "30": {
+    "outlook": null,
+    "results": 3.4,
+    "score": 3.4,
+    "underlying": 3.4
+   },
+   "4": {
+    "outlook": null,
+    "results": 82.8,
+    "score": 81.5,
+    "underlying": 80.7
+   },
+   "5": {
+    "outlook": null,
+    "results": 93.1,
+    "score": 89.4,
+    "underlying": 86.9
+   },
+   "6": {
+    "outlook": null,
+    "results": 15.5,
+    "score": 13.2,
+    "underlying": 11.7
+   },
+   "7": {
+    "outlook": null,
+    "results": 58.6,
+    "score": 53.7,
+    "underlying": 50.3
+   },
+   "8": {
+    "outlook": null,
+    "results": 37.9,
+    "score": 49.1,
+    "underlying": 56.6
+   },
+   "9": {
+    "outlook": null,
+    "results": 0.0,
+    "score": 0.0,
+    "underlying": 0.0
+   }
+  },
+  "2026": {
+   "1": {
+    "outlook": null,
+    "results": 55.2,
+    "score": 60.1,
+    "underlying": 63.4
+   },
+   "10": {
+    "outlook": null,
+    "results": 75.9,
+    "score": 70.9,
+    "underlying": 67.6
+   },
+   "11": {
+    "outlook": null,
+    "results": 36.2,
+    "score": 37.2,
+    "underlying": 37.9
+   },
+   "12": {
+    "outlook": null,
+    "results": 10.3,
+    "score": 11.6,
+    "underlying": 12.4
+   },
+   "13": {
+    "outlook": null,
+    "results": 13.8,
+    "score": 11.3,
+    "underlying": 9.7
+   },
+   "14": {
+    "outlook": null,
+    "results": 96.6,
+    "score": 96.6,
+    "underlying": 96.6
+   },
+   "15": {
+    "outlook": null,
+    "results": 48.3,
+    "score": 45.8,
+    "underlying": 44.1
+   },
+   "16": {
+    "outlook": null,
+    "results": 100.0,
+    "score": 100.0,
+    "underlying": 100.0
+   },
+   "17": {
+    "outlook": null,
+    "results": 22.4,
+    "score": 22.2,
+    "underlying": 22.1
+   },
+   "18": {
+    "outlook": null,
+    "results": 36.2,
+    "score": 38.9,
+    "underlying": 40.7
+   },
+   "19": {
+    "outlook": null,
+    "results": 89.7,
+    "score": 91.7,
+    "underlying": 93.1
+   },
+   "2": {
+    "outlook": null,
+    "results": 86.2,
+    "score": 82.5,
+    "underlying": 80.0
+   },
+   "20": {
+    "outlook": null,
+    "results": 0.0,
+    "score": 1.2,
+    "underlying": 2.1
+   },
+   "21": {
+    "outlook": null,
+    "results": 62.1,
+    "score": 65.8,
+    "underlying": 68.3
+   },
+   "22": {
+    "outlook": null,
+    "results": 65.5,
+    "score": 63.0,
+    "underlying": 61.4
+   },
+   "23": {
+    "outlook": null,
+    "results": 69.0,
+    "score": 76.4,
+    "underlying": 81.4
+   },
+   "24": {
+    "outlook": null,
+    "results": 17.2,
+    "score": 14.8,
+    "underlying": 13.1
+   },
+   "25": {
+    "outlook": null,
+    "results": 22.4,
+    "score": 23.9,
+    "underlying": 24.8
+   },
+   "26": {
+    "outlook": null,
+    "results": 41.4,
+    "score": 37.7,
+    "underlying": 35.2
+   },
+   "27": {
+    "outlook": null,
+    "results": 82.8,
+    "score": 84.0,
+    "underlying": 84.8
+   },
+   "28": {
+    "outlook": null,
+    "results": 29.3,
+    "score": 31.6,
+    "underlying": 33.1
+   },
+   "29": {
+    "outlook": null,
+    "results": 29.3,
+    "score": 37.0,
+    "underlying": 42.1
+   },
+   "3": {
+    "outlook": null,
+    "results": 44.8,
+    "score": 46.1,
+    "underlying": 46.9
+   },
+   "30": {
+    "outlook": null,
+    "results": 51.7,
+    "score": 41.8,
+    "underlying": 35.2
+   },
+   "4": {
+    "outlook": null,
+    "results": 79.3,
+    "score": 79.3,
+    "underlying": 79.3
+   },
+   "5": {
+    "outlook": null,
+    "results": 93.1,
+    "score": 88.6,
+    "underlying": 85.5
+   },
+   "6": {
+    "outlook": null,
+    "results": 72.4,
+    "score": 66.2,
+    "underlying": 62.1
+   },
+   "7": {
+    "outlook": null,
+    "results": 6.9,
+    "score": 10.6,
+    "underlying": 13.1
+   },
+   "8": {
+    "outlook": null,
+    "results": 58.6,
+    "score": 61.1,
+    "underlying": 62.8
+   },
+   "9": {
+    "outlook": null,
+    "results": 3.4,
+    "score": 2.2,
+    "underlying": 1.4
+   }
+  }
+ }
+}
