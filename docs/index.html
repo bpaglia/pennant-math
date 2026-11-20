@@ -21,7 +21,7 @@ details{position:relative}details[open] .pick{display:grid}.pick{display:none;po
 th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
 th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}tr.grp td{background:var(--bg);font-weight:600;text-align:left}
 .note{color:var(--mut);font-size:12.5px;margin:8px 0 0}.pos{color:#157347}.neg{color:#b42318}#msg{padding:16px;color:#b42318}#msg:empty{display:none}header a{color:#fff}
-</style>
+.best{font-weight:700;color:#157347}</style>
 </head>
 <body>
 <header><h1>Pennant Math</h1><p><span id="asof">Loading…</span> · <a href="methods.html">How it works</a></p></header>
@@ -33,6 +33,7 @@ th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}
 </div><p class="note">Pick any teams you follow. Your choice is saved in the page address, so you can bookmark or share it.</p></section>
 <div id="msg"></div>
 <section id="mine" hidden><h2>My teams</h2><div class="cards" id="cards"></div></section>
+<section id="cmp" hidden><h2>Compare teams</h2><div class="scroll"><table id="cmpT"></table></div><p class="note" id="cmpN"></p></section>
 <div class="grid">
  <section><h2>Record vs. true talent</h2><div class="cv"><canvas id="scatter"></canvas></div>
  <p class="note">Each dot is a team: expected win% (from runs scored and allowed) across, actual win% up. Above the line means a team won more than its runs say it should have: luck.</p></section>
@@ -41,7 +42,7 @@ th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}
 </div>
 <section><h2>Standings</h2><div class="bar"><select id="view"><option value="division">By division</option><option value="league">By league</option><option value="overall">Overall</option></select>
 <label><input type="checkbox" id="only"> Selected teams only</label></div><div class="scroll"><table id="tbl"></table></div>
-<p class="note">Luck = actual wins minus expected wins. Elo is an opponent-adjusted strength rating (1500 is average). Click a column to sort.</p></section>
+<p class="note">Luck = actual wins minus expected wins. Elo is an opponent-adjusted strength rating (1500 is average). Pennant Score (0 to 100) blends results, underlying strength, and outlook. 1-run: record in one-run games, with ↓ for an unusually good record likely to slip and ↑ for an unusually poor one likely to improve. Home RD and Road RD: run differential at home and away. vs .500+: record against teams above .500. Click a column to sort. Details are in How it works.</p></section>
 <div class="grid">
  <section id="oddsA"><h2 id="oddsT">Playoff odds</h2><div class="cv tall" id="oddsCv"><canvas id="oddsBar"></canvas></div><div id="field" hidden></div><p class="note" id="oddsNote"></p></section>
  <section id="oddsB"><h2>Playoff odds over the season</h2><div class="cv"><canvas id="oddsLine"></canvas></div>
@@ -57,16 +58,26 @@ function mk(id,cfg){CH[id]&&CH[id].destroy();CH[id]=new Chart($('#'+id),cfg)}
 const rows=()=>D.standings.seasons[season].teams;
 const oddsRow=t=>D.odds&&D.odds.meta.season==season?D.odds.teams.find(o=>o.team_id==t.team_id):null;
 const elo=t=>{const e=D.elo&&D.elo.seasons[season];return e?e.end[t.team_id]:null};
+const sc=t=>{const x=D.scores&&D.scores.seasons[season];return x?x[t.team_id]:null},arrow=t=>t.one_run_z>=1.5?' ↓':t.one_run_z<=-1.5?' ↑':'';
 function chosen(){const r=rows();let c=r.filter(t=>sel.includes(t.abbreviation));return c.length?c:[...r].sort((a,b)=>b.run_diff-a.run_diff).slice(0,3)}
 function save(){const p=new URLSearchParams();if(sel.length)p.set('teams',sel.join(','));p.set('season',season);history.replaceState(null,'','?'+p);try{localStorage.setItem('pm_teams',sel.join(','))}catch(e){}}
 function render(){save();$('#pickSum').textContent=sel.length?sel.join(', '):'Pick your teams';
  $('#asof').textContent=`Season ${season} · through ${D.standings.seasons[season].as_of}${D.standings.seasons[season].complete?' (final)':''}`;
- cards();scatter();table();momentum();odds()}
+ cards();compare();scatter();table();momentum();odds()}
 function cards(){const m=rows().filter(t=>sel.includes(t.abbreviation));$('#mine').hidden=!m.length;
- $('#cards').innerHTML=m.map(t=>{const o=oddsRow(t),e=elo(t),od=o?(o.p_playoffs>=.9995?'In':o.p_playoffs<=.0005?'Out':pct(o.p_playoffs)):'–';
+ $('#cards').innerHTML=m.map(t=>{const o=oddsRow(t),e=elo(t),s=sc(t),od=o?(o.p_playoffs>=.9995?'In':o.p_playoffs<=.0005?'Out':pct(o.p_playoffs)):'–';
  const r=['th','st','nd','rd'];return `<div class="card" style="--c:${col(t.abbreviation)}"><b>${t.name}</b><dl><dt>Record</dt><dd>${t.wins}-${t.losses}</dd>
  <dt>${t.league==='American'?'AL':'NL'} ${t.division}</dt><dd>#${t.division_rank}${t.games_back?`, ${t.games_back} GB`:''}</dd><dt>Run differential</dt><dd>${f1(t.run_diff)}</dd>
- <dt>Luck (wins)</dt><dd>${f1(t.luck)}</dd><dt>Elo</dt><dd>${e==null?'–':e.toFixed(0)}</dd><dt>Playoffs</dt><dd>${od}</dd></dl></div>`}).join('')}
+ <dt>Luck (wins)</dt><dd>${f1(t.luck)}</dd><dt>Elo</dt><dd>${e==null?'–':e.toFixed(0)}</dd><dt>Playoffs</dt><dd>${od}</dd><dt>Pennant Score</dt><dd>${s&&s.score!=null?s.score.toFixed(0):'–'}</dd></dl></div>`}).join('')}
+function compare(){const c=sel.map(a=>rows().find(t=>t.abbreviation===a)).filter(Boolean),all=c.length,v=c.slice(0,6);$('#cmp').hidden=v.length<2;if(v.length<2)return;
+ const s=t=>sc(t)||{},od=t=>{const o=oddsRow(t);return o?o.p_playoffs:null},n=(x,d)=>x==null?'–':x.toFixed(d),rec=(w,l)=>`${w}-${l}`,share=(w,l)=>w/((w+l)||1);
+ const M=[['Record',t=>rec(t.wins,t.losses),t=>t.win_pct,1],['Run diff per game',t=>f1(t.run_diff_per_game),t=>t.run_diff_per_game,1],['Expected wins',t=>n(t.pyth_wins,1),t=>t.pyth_wins,1],['Luck (wins)',t=>f1(t.luck),0,0],
+ ['Elo',t=>n(elo(t),0),elo,1],['Pennant Score',t=>n(s(t).score,0),t=>s(t).score,1],['↳ Results',t=>n(s(t).results,0),t=>s(t).results,1],['↳ Underlying',t=>n(s(t).underlying,0),t=>s(t).underlying,1],['↳ Outlook',t=>n(s(t).outlook,0),t=>s(t).outlook,1],
+ ['One-run record',t=>rec(t.one_run_wins,t.one_run_losses),0,0],['Extra innings',t=>rec(t.extra_wins,t.extra_losses),0,0],['Home run diff',t=>f1(t.home_run_diff),t=>t.home_run_diff,1],['Road run diff',t=>f1(t.road_run_diff),t=>t.road_run_diff,1],
+ ['vs. teams above .500',t=>rec(t.vs_winning_wins,t.vs_winning_losses),t=>share(t.vs_winning_wins,t.vs_winning_losses),1],['Schedule played (+ is harder)',t=>f1(t.sos_played),0,0],['Playoff odds',t=>io(od(t)),od,1]];
+ $('#cmpT').innerHTML=`<tr><th></th>${v.map(t=>`<th style="color:${col(t.abbreviation)}">${t.abbreviation}</th>`).join('')}</tr>`+M.map(([l,f,g,d])=>{const x=g?v.map(g):[],ok=d?x.filter(a=>a!=null):[],b=ok.length&&new Set(ok).size>1?Math.max(...ok):null;
+  return `<tr><td>${l}</td>${v.map((t,i)=>`<td class="${d&&x[i]!=null&&x[i]===b?'best':''}">${f(t)}</td>`).join('')}</tr>`}).join('');
+ $('#cmpN').textContent=(all>6?`Showing the first 6 of ${all} picked teams. `:'')+'Bold marks the best in each row. Playoff odds show In or Out once a season is over.'}
 function scatter(){const r=rows().filter(t=>t.games),xs=r.map(t=>t.pyth_win_pct),lo=Math.min(...xs,...r.map(t=>t.win_pct))-.02,hi=Math.max(...xs,...r.map(t=>t.win_pct))+.02;
  const pt=t=>({x:t.pyth_win_pct,y:t.win_pct,a:t.abbreviation});
  mk('scatter',{type:'scatter',data:{datasets:[{data:r.filter(t=>!sel.includes(t.abbreviation)).map(pt),backgroundColor:GREY,pointRadius:4},
@@ -75,16 +86,16 @@ function scatter(){const r=rows().filter(t=>t.games),xs=r.map(t=>t.pyth_win_pct)
  options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.a?`${c.raw.a}: expected ${(c.raw.x*100).toFixed(1)}%, actual ${(c.raw.y*100).toFixed(1)}%`:''}}},
  scales:{x:{min:lo,max:hi,title:{display:true,text:'Expected win %'},ticks:{callback:v=>(v*100).toFixed(0)+'%'}},y:{min:lo,max:hi,title:{display:true,text:'Actual win %'},ticks:{callback:v=>(v*100).toFixed(0)+'%'}}}}})}
 function table(){const v=$('#view').value,only=$('#only').checked,hasO=D.odds&&D.odds.meta.season==season;
- const cols=[['name','Team'],['wins','W'],['losses','L'],['win_pct','Win%'],['run_diff','RD'],['pyth_wins','Exp W'],['luck','Luck'],['elo','Elo']];if(hasO)cols.push(['po','Playoff%']);
- const val=(t,k)=>k==='elo'?elo(t):k==='po'?(oddsRow(t)||{}).p_playoffs:t[k];
+ const cols=[['name','Team'],['wins','W'],['losses','L'],['win_pct','Win%'],['run_diff','RD'],['pyth_wins','Exp W'],['luck','Luck'],['elo','Elo'],['score','Score'],['one','1-run'],['ext','Extras'],['hrd','Home RD'],['rrd','Road RD'],['vsw','vs .500+']];if(hasO)cols.push(['po','Playoff%']);
+ const val=(t,k)=>k==='elo'?elo(t):k==='po'?(oddsRow(t)||{}).p_playoffs:k==='score'?(sc(t)||{}).score:k==='one'?t.one_run_wins-t.one_run_losses:k==='ext'?t.extra_wins-t.extra_losses:k==='hrd'?t.home_run_diff:k==='rrd'?t.road_run_diff:k==='vsw'?t.vs_winning_wins-t.vs_winning_losses:t[k];
  let r=rows().map(t=>t);if(only)r=r.filter(t=>sel.includes(t.abbreviation));
  const cmp=(a,b)=>{const x=val(a,sortKey),y=val(b,sortKey);return (typeof x==='string'?x.localeCompare(y):(x??-1e9)-(y??-1e9))*sortDir};
  const key=t=>v==='division'?`${t.league==='American'?'AL':'NL'} ${t.division}`:v==='league'?`${t.league} League`:'';
  const groups=[...new Set(r.map(key))].sort(),line=t=>`<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td><td>${t.wins}</td><td>${t.losses}</td><td>${t.win_pct==null?'–':t.win_pct.toFixed(3)}</td>
- <td class="${t.run_diff>=0?'pos':'neg'}">${f1(t.run_diff)}</td><td>${t.pyth_wins==null?'–':t.pyth_wins.toFixed(1)}</td><td class="${r1(t.luck)>=0?'pos':'neg'}">${f1(t.luck)}</td><td>${elo(t)==null?'–':elo(t).toFixed(0)}</td>${hasO?`<td>${io((oddsRow(t)||{}).p_playoffs)}</td>`:''}</tr>`;
+ <td class="${t.run_diff>=0?'pos':'neg'}">${f1(t.run_diff)}</td><td>${t.pyth_wins==null?'–':t.pyth_wins.toFixed(1)}</td><td class="${r1(t.luck)>=0?'pos':'neg'}">${f1(t.luck)}</td><td>${elo(t)==null?'–':elo(t).toFixed(0)}</td><td>${(sc(t)||{}).score==null?'–':sc(t).score.toFixed(0)}</td><td>${t.one_run_wins}-${t.one_run_losses}${arrow(t)}</td><td>${t.extra_wins}-${t.extra_losses}</td><td class="${t.home_run_diff>=0?'pos':'neg'}">${f1(t.home_run_diff)}</td><td class="${t.road_run_diff>=0?'pos':'neg'}">${f1(t.road_run_diff)}</td><td>${t.vs_winning_wins}-${t.vs_winning_losses}</td>${hasO?`<td>${io((oddsRow(t)||{}).p_playoffs)}</td>`:''}</tr>`;
  $('#tbl').innerHTML=`<tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]}${c[0]===sortKey?(sortDir<0?' ▼':' ▲'):''}</th>`).join('')}</tr>`+
  groups.map(g=>(g?`<tr class="grp"><td colspan="${cols.length}">${g}</td></tr>`:'')+r.filter(t=>key(t)===g).sort(cmp).map(line).join('')).join('');
- document.querySelectorAll('th').forEach(h=>h.onclick=()=>{const k=h.dataset.k;sortDir=k===sortKey?-sortDir:(k==='name'?1:-1);sortKey=k;table()})}
+ document.querySelectorAll('#tbl th').forEach(h=>h.onclick=()=>{const k=h.dataset.k;sortDir=k===sortKey?-sortDir:(k==='name'?1:-1);sortKey=k;table()})}
 function momentum(){const R=D.rolling_rd&&D.rolling_rd.seasons[season];if(!R)return;const c=chosen();
  mk('momentum',{type:'line',data:{labels:Array.from({length:Math.max(...c.map(t=>(R[t.team_id]||[]).length))},(_,i)=>i+1),
  datasets:c.map((t,i)=>({label:t.abbreviation,data:(R[t.team_id]||[]).map(e=>e[2]),borderColor:sel.length?col(t.abbreviation):PAL[i],pointRadius:0,borderWidth:2,tension:.2}))},
@@ -101,7 +112,7 @@ function odds(){const has=D.odds&&D.odds.meta.season==season;$('#oddsA').hidden=
 function picker(){const g={};rows().forEach(t=>(g[`${t.league==='American'?'AL':'NL'} ${t.division}`]??=[]).push(t));
  $('#pick').innerHTML=Object.keys(g).sort().map(k=>`<h4>${k}</h4>`+g[k].map(t=>`<label><input type="checkbox" value="${t.abbreviation}" ${sel.includes(t.abbreviation)?'checked':''}> ${t.name}</label>`).join('')).join('');
  $('#pick').onchange=e=>{sel=[...document.querySelectorAll('#pick input:checked')].map(i=>i.value);render()}}
-async function init(){for(const n of ['standings','rolling_rd','elo','odds','odds_history']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
+async function init(){for(const n of ['standings','rolling_rd','elo','odds','odds_history','scores']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
  if(!D.standings){$('#msg').textContent='Data files not found. Run the GitHub workflow, then reload.';$('#asof').textContent='';return}
  const ss=Object.keys(D.standings.seasons).sort(),p=new URLSearchParams(location.search);season=ss.includes(p.get('season'))?p.get('season'):ss[ss.length-1];
  $('#season').innerHTML=ss.map(s=>`<option ${s===season?'selected':''}>${s}</option>`).join('');
