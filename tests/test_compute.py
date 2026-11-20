@@ -227,6 +227,37 @@ class OfficialRecordsTest(unittest.TestCase):
         self.assertTrue(lines[0].startswith("SKIP"))
 
 
+class BatchOneFieldsTest(unittest.TestCase):
+    def test_home_and_road_run_differential(self):
+        games = [norm_game(1, "2025-04-01", 1, 2, 5, 3), norm_game(2, "2025-04-02", 2, 1, 4, 1)]
+        row = row_for(compute.compute_standings(games, TEAMS), 1)
+        self.assertEqual((row["home_run_diff"], row["road_run_diff"]), (2, -3))
+
+    def test_one_run_z_flags_unusual_close_game_records(self):
+        games = [norm_game(i, "2025-04-01", 1, 2 + i, 3, 2) for i in range(1, 5)]      # four one-run wins
+        row = row_for(compute.compute_standings(games, TEAMS), 1)
+        self.assertEqual(row["one_run_z"], 2.0)
+        self.assertIsNone(row_for(compute.compute_standings([], TEAMS), 1)["one_run_z"])
+
+    def test_record_against_teams_above_500(self):
+        games = [norm_game(1, "2025-04-01", 2, 3, 5, 1), norm_game(2, "2025-04-02", 2, 3, 5, 1),
+                 norm_game(3, "2025-04-03", 2, 1, 5, 1), norm_game(4, "2025-04-04", 1, 3, 5, 1)]
+        standings = compute.compute_standings(games, TEAMS)     # team 2 is 3-0, the only team above .500 besides team 1 (1-1)
+        self.assertEqual((row_for(standings, 1)["vs_winning_wins"], row_for(standings, 1)["vs_winning_losses"]), (0, 1))
+        self.assertEqual((row_for(standings, 3)["vs_winning_wins"], row_for(standings, 3)["vs_winning_losses"]), (0, 2))
+        self.assertEqual((row_for(standings, 2)["vs_winning_wins"], row_for(standings, 2)["vs_winning_losses"]), (0, 0))
+
+    def test_schedule_played_is_relative_to_the_league_average(self):
+        ratings = {str(i): 1500.0 for i in range(1, 31)}
+        ratings["1"], ratings["2"] = 1600.0, 1400.0
+        games = [norm_game(1, "2025-04-01", 1, 2, 5, 3)]
+        standings = compute.compute_standings(games, TEAMS)
+        compute.add_sos_played(standings, games, ratings, TEAM_IDS)
+        self.assertEqual(row_for(standings, 1)["sos_played"], -100.0)     # faced the 1400 team
+        self.assertEqual(row_for(standings, 2)["sos_played"], 100.0)      # faced the 1600 team
+        self.assertIsNone(row_for(standings, 5)["sos_played"])
+
+
 class EndToEndTest(unittest.TestCase):
     def test_main_writes_all_outputs(self):
         with tempfile.TemporaryDirectory() as tmp:
