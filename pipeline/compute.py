@@ -82,6 +82,7 @@ def _blank_stats() -> dict:
         "one_run_w": 0, "one_run_l": 0, "extra_w": 0, "extra_l": 0,
         "home_w": 0, "home_l": 0, "road_w": 0, "road_l": 0, "remaining": 0,
         "home_rs": 0, "home_ra": 0, "road_rs": 0, "road_ra": 0,
+        "hf": 0, "ha": 0, "err": 0, "sho_p": 0, "sho_a": 0, "bw": 0, "bl": 0,
     }
 
 
@@ -116,6 +117,14 @@ def compute_standings(season_games: list, teams: list) -> dict:
         ):
             row = stats[team_id]
             won = scored > allowed
+            own, other = ("home", "away") if at_home else ("away", "home")
+            row["hf"] += game.get(f"{own}_hits") or 0
+            row["ha"] += game.get(f"{other}_hits") or 0
+            row["err"] += game.get(f"{own}_errors") or 0
+            row["sho_p"] += allowed == 0
+            row["sho_a"] += scored == 0
+            if margin >= 5:
+                row["bw" if won else "bl"] += 1
             row["rs"] += scored
             row["ra"] += allowed
             row["wins" if won else "losses"] += 1
@@ -155,6 +164,8 @@ def compute_standings(season_games: list, teams: list) -> dict:
             "extra_wins": s["extra_w"], "extra_losses": s["extra_l"],
             "home_wins": s["home_w"], "home_losses": s["home_l"],
             "road_wins": s["road_w"], "road_losses": s["road_l"],
+            "hits_for": s["hf"], "hits_against": s["ha"], "errors": s["err"], "shutouts_pitched": s["sho_p"],
+            "shutouts_against": s["sho_a"], "blowout_wins": s["bw"], "blowout_losses": s["bl"],
             "home_run_diff": s["home_rs"] - s["home_ra"], "road_run_diff": s["road_rs"] - s["road_ra"],
             "one_run_z": round((s["one_run_w"] - close / 2) / math.sqrt(close / 4), 2) if close else None,
             "games_remaining": s["remaining"],
