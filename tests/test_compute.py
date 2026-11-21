@@ -258,6 +258,27 @@ class BatchOneFieldsTest(unittest.TestCase):
         self.assertIsNone(row_for(standings, 5)["sos_played"])
 
 
+class CategoryTotalsTest(unittest.TestCase):
+    def test_hits_errors_shutouts_and_blowouts(self):
+        games = [norm_game(1, "2025-04-01", 1, 2, 7, 0),      # team 1 wins by 7 and pitches a shutout
+                 norm_game(2, "2025-04-02", 2, 1, 6, 1)]      # team 1 loses by 5 on the road
+        games[0].update(home_hits=9, away_hits=3, home_errors=0, away_errors=2)
+        games[1].update(home_hits=10, away_hits=4, home_errors=1, away_errors=1)
+        row = row_for(compute.compute_standings(games, TEAMS), 1)
+        self.assertEqual((row["hits_for"], row["hits_against"]), (9 + 4, 3 + 10))
+        self.assertEqual(row["errors"], 0 + 1)
+        self.assertEqual((row["shutouts_pitched"], row["shutouts_against"]), (1, 0))
+        self.assertEqual((row["blowout_wins"], row["blowout_losses"]), (1, 1))
+        other = row_for(compute.compute_standings(games, TEAMS), 2)
+        self.assertEqual((other["shutouts_pitched"], other["shutouts_against"]), (0, 1))
+
+    def test_missing_hit_and_error_values_count_as_zero(self):
+        games = [norm_game(1, "2025-04-01", 1, 2, 3, 2)]
+        games[0].update(home_hits=None, away_hits=None, home_errors=None, away_errors=None)
+        row = row_for(compute.compute_standings(games, TEAMS), 1)
+        self.assertEqual((row["hits_for"], row["errors"]), (0, 0))
+
+
 class EndToEndTest(unittest.TestCase):
     def test_main_writes_all_outputs(self):
         with tempfile.TemporaryDirectory() as tmp:
