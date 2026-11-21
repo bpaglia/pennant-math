@@ -1,8 +1,11 @@
 name: Fetch, validate, and compute
 
 # Runs entirely on GitHub's servers, so nothing needs to be installed locally.
+# It also runs by itself every day at 10:00 UTC (6 AM Eastern in summer, 5 AM in winter).
 # Start it by hand: Actions tab > "Fetch, validate, and compute" > Run workflow.
 on:
+  schedule:
+    - cron: "0 10 * * *"
   workflow_dispatch:
     inputs:
       seasons:
@@ -59,6 +62,10 @@ jobs:
           if [ -z "$BALLDONTLIE_API_KEY" ]; then
             echo "The BALLDONTLIE_API_KEY secret is not set. Add it under Settings > Secrets and variables > Actions."
             exit 1
+          fi
+          # Scheduled runs have no inputs: refresh just the current season.
+          if [ -z "$SEASONS" ]; then
+            SEASONS="$(date -u +%Y)"
           fi
           if ! [[ "$SEASONS" =~ ^[0-9]{4}( [0-9]{4})*$ ]]; then
             echo "Seasons must be four-digit years separated by single spaces, for example: 2025 2026"
@@ -174,6 +181,7 @@ jobs:
           cp data/processed/*.json docs/data/
 
       - name: Save data to the repository
+        if: steps.validate.outcome == 'success' && steps.compute.outcome == 'success' && steps.odds.outcome == 'success' && steps.score.outcome == 'success' && steps.backtest.outcome != 'failure' && steps.tuning.outcome != 'failure'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -186,10 +194,18 @@ jobs:
             git push
           fi
 
+      - name: Keep the files from a failed run for inspection
+        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.score.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-run-data
+          path: data
+          retention-days: 7
+
       - name: Fail the run if validation or computing found problems
         if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure' || steps.score.outcome == 'failure'
         shell: bash
         run: |
-          echo "Validation or computing found problems. The data was saved so you can inspect it, but do not build on it yet."
+          echo "Validation or computing found problems. Nothing was published and the site still shows the last good data. The files from this run are attached to the run page as failed-run-data for 7 days."
           exit 1
 
