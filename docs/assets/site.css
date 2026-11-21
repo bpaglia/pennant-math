@@ -1,0 +1,14 @@
+:root{--ink:#1b2430;--mut:#667085;--line:#e3e7ee;--bg:#f6f8fb;--card:#fff;--navy:#1E3A8A}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;color:var(--ink);background:var(--bg)}a{color:var(--navy)}
+header{background:var(--navy);color:#fff;padding:12px 20px}header h1{margin:0;font-size:22px}header a{color:#fff;text-decoration:none}
+nav{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;font-size:14px}nav a{opacity:.8}nav a.on{opacity:1;font-weight:700;border-bottom:2px solid #fff}
+main{max-width:1100px;margin:0 auto;padding:16px}section,.mod{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+h2{margin:0 0 8px;font-size:18px}h3{margin:0}.hero{text-align:center;padding:28px 16px}.hero h2{font-size:28px}.hero p{max-width:640px;margin:8px auto;color:var(--mut)}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}.mod{display:flex;flex-direction:column;margin:0}.mod .lead{margin:4px 0 8px;font-weight:600}
+.cv{position:relative;height:210px}.tall{height:640px}.cta{display:inline-block;margin-top:10px;padding:8px 14px;background:var(--navy);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;align-self:flex-start}
+.blurb,.note{color:var(--mut);font-size:13px;margin:2px 0}.mod .blurb{min-height:38px}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{cursor:pointer;color:var(--mut)}tr.sel td{background:#fff7d6}
+select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.warn{background:#fff7d6;border:1px solid #ecd98a;border-radius:8px;padding:8px 12px;font-size:13px}
+details{position:relative}details[open] .pick{display:grid}.pick{display:none;position:absolute;z-index:5;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 14px;width:min(640px,90vw);max-height:60vh;overflow:auto;box-shadow:0 8px 24px #0002;text-align:left}
+.pick h4{grid-column:1/-1;margin:8px 0 2px;font-size:12px;color:var(--mut)}.pick label{font-size:13px;white-space:nowrap}summary,button{font:inherit;padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid var(--line);border-left:5px solid;border-radius:8px;padding:6px 10px;font-size:13.5px}
