@@ -357,6 +357,77 @@ class TuningTest(unittest.TestCase):
         self.assertAlmostEqual(odds.summarize_backtest(records)["calibration_error"], 0.4, places=3)
 
 
+def scheduled_season(season=2026):
+    """A season that has not started: every game is still on the schedule."""
+    games = complete_season(season)
+    for game in games:
+        game.update(status_state="scheduled", home_runs=None, away_runs=None, home_hits=None, away_hits=None)
+    return games
+
+
+class DailyRefreshTest(unittest.TestCase):
+    def test_in_season_target_is_the_last_game_played(self):
+        games = {2025: complete_season(2025)}
+        season, as_of = odds.default_target(games, TEAM_ID_SET)
+        self.assertEqual(season, 2025)
+        self.assertEqual(as_of, max(g["date_et"] for g in games[2025]))
+
+    def test_preseason_target_is_the_day_before_the_first_game(self):
+        games = {2025: complete_season(2025), 2026: scheduled_season(2026)}
+        season, as_of = odds.default_target(games, TEAM_ID_SET)
+        self.assertEqual(season, 2026)
+        self.assertEqual(as_of, "2026-03-26")          # the schedule starts on March 27
+
+    def test_empty_newest_season_falls_back_to_the_last_real_one(self):
+        games = {2025: complete_season(2025), 2026: []}
+        self.assertEqual(odds.default_target(games, TEAM_ID_SET)[0], 2025)
+        self.assertEqual(odds.default_target({2026: []}, TEAM_ID_SET), (None, None))
+
+    def test_history_point_is_added_replaced_and_kept_aligned(self):
+        state = odds.SeasonState(TEAMS, complete_season(), "2025-07-01")
+        result = odds.simulate(state, EQUAL, n_sims=50, seed=1)
+        history = {"meta": {}}
+        odds.add_history_point(history, 2025, "2025-07-02", state.ids, result)
+        odds.add_history_point(history, 2025, "2025-07-01", state.ids, result)     # earlier date goes first
+        odds.add_history_point(history, 2025, "2025-07-02", state.ids, result)     # same date is replaced, not repeated
+        block = history["seasons"]["2025"]
+        self.assertEqual(block["dates"], ["2025-07-01", "2025-07-02"])
+        self.assertTrue(all(len(v) == 2 for v in block["p_playoffs"].values()))
+        self.assertEqual(len(block["p_playoffs"]), 30)
+
+    def test_each_single_date_run_adds_a_history_point(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = root / "raw"
+            raw.mkdir()
+            (raw / "teams.json").write_text(json.dumps({"teams": TEAMS}))
+            (raw / "games_2025.json").write_text(json.dumps({"meta": {}, "games": complete_season()}))
+            self.assertEqual(compute.main(["--raw", str(raw), "--out", str(root / "out")]), 0)
+            for day in ("2025-07-01", "2025-07-02", "2025-07-02"):
+                self.assertEqual(odds.main(["--raw", str(raw), "--processed", str(root / "out"),
+                                            "--as-of", day, "--sims", "50"]), 0)
+            history = json.loads((root / "out" / "odds_history.json").read_text())
+            self.assertEqual(history["seasons"]["2025"]["dates"], ["2025-07-01", "2025-07-02"])
+
+    def test_whole_pipeline_survives_a_season_that_has_not_started(self):
+        import score
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = root / "raw"
+            raw.mkdir()
+            (raw / "teams.json").write_text(json.dumps({"teams": TEAMS}))
+            (raw / "games_2025.json").write_text(json.dumps({"meta": {}, "games": complete_season(2025)}))
+            (raw / "games_2026.json").write_text(json.dumps({"meta": {}, "games": scheduled_season(2026)}))
+            out = root / "out"
+            self.assertEqual(compute.main(["--raw", str(raw), "--out", str(out)]), 0)
+            self.assertEqual(odds.main(["--raw", str(raw), "--processed", str(out), "--sims", "100"]), 0)
+            self.assertEqual(score.main(["--processed", str(out)]), 0)
+            data = json.loads((out / "odds.json").read_text())
+            self.assertEqual((data["meta"]["season"], data["meta"]["as_of"]), (2026, "2026-03-26"))
+            self.assertAlmostEqual(sum(t["p_playoffs"] for t in data["teams"]), 12.0, places=1)
+            self.assertEqual(json.loads((out / "standings.json").read_text())["seasons"]["2026"]["teams"][0]["games"], 0)
+
+
 class CommandLineTest(unittest.TestCase):
     def write_inputs(self, root: Path):
         raw = root / "raw"
