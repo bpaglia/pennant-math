@@ -409,6 +409,45 @@ def regular_season_span(season_games: list, team_ids: set):
     return (dates[0], dates[-1]) if dates else (None, None)
 
 
+def default_target(games_by_season: dict, team_ids: set, season: int = None):
+    """The latest season with regular-season games, and the date to simulate from.
+
+    In season that is the last game played. Before opening day it is the day before the
+    first scheduled game, so the model produces preseason odds from the carried-over ratings.
+    """
+    for candidate in ([season] if season else sorted(games_by_season, reverse=True)):
+        games = [g for g in games_by_season.get(candidate, [])
+                 if g.get("season_type") == "regular" and is_league_game(g, team_ids)
+                 and g.get("status_state") not in SKIPPED_STATES]
+        if not games:
+            continue
+        _, last = regular_season_span(games_by_season[candidate], team_ids)
+        if last:
+            return candidate, last
+        first = min(g["date_et"] for g in games)
+        return candidate, (date.fromisoformat(first) - timedelta(days=1)).isoformat()
+    return None, None
+
+
+def add_history_point(history: dict, season: int, as_of: str, ids: list, result: dict) -> None:
+    """Add (or replace) one date's playoff and division odds in the odds-over-time data."""
+    block = history.setdefault("seasons", {}).setdefault(
+        str(season), {"dates": [], "p_playoffs": {}, "p_division": {}})
+    dates = block["dates"]
+    position = bisect.bisect_left(dates, as_of)
+    exists = position < len(dates) and dates[position] == as_of
+    if not exists:
+        dates.insert(position, as_of)
+    for key in ("p_playoffs", "p_division"):
+        for i, team_id in enumerate(ids):
+            values = block[key].setdefault(str(team_id), [None] * (len(dates) - (0 if exists else 1)))
+            value = round(float(result[key][i]), 3)
+            if exists:
+                values[position] = value
+            else:
+                values.insert(position, value)
+
+
 def postseason_teams(season_games: list, team_ids: set) -> set:
     """Teams that played a postseason game. Every qualifier plays at least one."""
     found = set()
@@ -631,10 +670,13 @@ def main(argv=None) -> int:
             print_backtest(summary, outcome["field_check"], teams_by_id)
             return 0
 
-        season = args.season or max(games_by_season)
+        season, default_date = default_target(games_by_season, team_ids, args.season)
+        if season is None:
+            print("No regular-season games found in the data.", file=sys.stderr)
+            return 2
         season_games = games_by_season[season]
-        first, last = regular_season_span(season_games, team_ids)
-        as_of = args.as_of or last
+        _, last = regular_season_span(season_games, team_ids)
+        as_of = args.as_of or default_date
         state = SeasonState(teams, season_games, as_of)
         ratings = ratings_as_of(elo_data, season, as_of, state.ids)
         result = simulate(state, ratings, args.sims, args.seed, home_advantage, args.rating_noise)
@@ -642,8 +684,13 @@ def main(argv=None) -> int:
         rows = build_team_rows(state, ratings, result, extra)
         write_json(args.processed / "odds.json",
                    {"meta": dict(meta, season=season, as_of=as_of), "teams": rows})
+        history_path = args.processed / "odds_history.json"
+        history = json.loads(history_path.read_text(encoding="utf-8")) if history_path.exists() else {"meta": {}}
+        add_history_point(history, season, as_of, state.ids, result)
+        history["meta"] = dict(meta, note="daily points are added by odds.py; --backtest replaces the seasons it covers")
+        write_json(history_path, history, compact=True)
         print_odds(season, as_of, rows, state)
-        if as_of == last:
+        if last and as_of == last:
             check = final_field(teams, season_games, args.seed)
             actual = postseason_teams(season_games, team_ids)
             if not actual:

@@ -102,7 +102,11 @@ def main(argv=None) -> int:
 
     write_json(args.processed / "scores.json", {
         "meta": {"generated_at_utc": utc_now_iso(), "weights": WEIGHTS}, "seasons": seasons})
-    latest = max(seasons)
+    scored = [season for season in sorted(seasons) if any(v["score"] is not None for v in seasons[season].values())]
+    if not scored:
+        print("No scores yet: no games have been played.")
+        return 0
+    latest = scored[-1]
     names = {row["team_id"]: row["abbreviation"] for row in standings["seasons"][latest]["teams"]}
     top = sorted(seasons[latest].items(), key=lambda item: -(item[1]["score"] or 0))[:5]
     print(f"Pennant Score {latest}, top 5: " + ", ".join(f"{names[int(t)]} {v['score']:.0f}" for t, v in top))
