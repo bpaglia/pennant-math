@@ -21,7 +21,7 @@ details{position:relative}details[open] .pick{display:grid}.pick{display:none;po
 th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
 th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}tr.grp td{background:var(--bg);font-weight:600;text-align:left}
 .note{color:var(--mut);font-size:12.5px;margin:8px 0 0}.pos{color:#157347}.neg{color:#b42318}#msg{padding:16px;color:#b42318}#msg:empty{display:none}header a{color:#fff}
-.best{font-weight:700;color:#157347}</style>
+.best{font-weight:700;color:#157347}.grid{align-items:start}#cmpT{width:auto;min-width:45%}#cmpT td:first-child{padding-right:36px}</style>
 </head>
 <body>
 <header><h1>Pennant Math</h1><p><span id="asof">Loading…</span> · <a href="methods.html">How it works</a></p></header>
@@ -86,7 +86,7 @@ function scatter(){const r=rows().filter(t=>t.games),xs=r.map(t=>t.pyth_win_pct)
  options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.a?`${c.raw.a}: expected ${(c.raw.x*100).toFixed(1)}%, actual ${(c.raw.y*100).toFixed(1)}%`:''}}},
  scales:{x:{min:lo,max:hi,title:{display:true,text:'Expected win %'},ticks:{callback:v=>(v*100).toFixed(0)+'%'}},y:{min:lo,max:hi,title:{display:true,text:'Actual win %'},ticks:{callback:v=>(v*100).toFixed(0)+'%'}}}}})}
 function table(){const v=$('#view').value,only=$('#only').checked,hasO=D.odds&&D.odds.meta.season==season;
- const cols=[['name','Team'],['wins','W'],['losses','L'],['win_pct','Win%'],['run_diff','RD'],['pyth_wins','Exp W'],['luck','Luck'],['elo','Elo'],['score','Score'],['one','1-run'],['ext','Extras'],['hrd','Home RD'],['rrd','Road RD'],['vsw','vs .500+']];if(hasO)cols.push(['po','Playoff%']);
+ const cols=[['name','Team'],['wins','W'],['losses','L'],['win_pct','Win%'],['run_diff','RD'],['pyth_wins','Exp W'],['luck','Luck'],['elo','Elo'],['score','Score'],['one','1-run'],['ext','Extras'],['hrd','Home RD'],['rrd','Road RD'],['vsw','vs .500+']];if(hasO)cols.push(['po','Playoffs']);
  const val=(t,k)=>k==='elo'?elo(t):k==='po'?(oddsRow(t)||{}).p_playoffs:k==='score'?(sc(t)||{}).score:k==='one'?t.one_run_wins-t.one_run_losses:k==='ext'?t.extra_wins-t.extra_losses:k==='hrd'?t.home_run_diff:k==='rrd'?t.road_run_diff:k==='vsw'?t.vs_winning_wins-t.vs_winning_losses:t[k];
  let r=rows().map(t=>t);if(only)r=r.filter(t=>sel.includes(t.abbreviation));
  const cmp=(a,b)=>{const x=val(a,sortKey),y=val(b,sortKey);return (typeof x==='string'?x.localeCompare(y):(x??-1e9)-(y??-1e9))*sortDir};
@@ -111,10 +111,10 @@ function odds(){const has=D.odds&&D.odds.meta.season==season;$('#oddsA').hidden=
  options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{y:{min:0,max:1,ticks:{callback:v=>pct(v)}},x:{ticks:{maxTicksLimit:8}}}}})}
 function picker(){const g={};rows().forEach(t=>(g[`${t.league==='American'?'AL':'NL'} ${t.division}`]??=[]).push(t));
  $('#pick').innerHTML=Object.keys(g).sort().map(k=>`<h4>${k}</h4>`+g[k].map(t=>`<label><input type="checkbox" value="${t.abbreviation}" ${sel.includes(t.abbreviation)?'checked':''}> ${t.name}</label>`).join('')).join('');
- $('#pick').onchange=e=>{sel=[...document.querySelectorAll('#pick input:checked')].map(i=>i.value);render()}}
+ $('#pick').onchange=e=>{const now=[...document.querySelectorAll('#pick input:checked')].map(i=>i.value);sel=[...sel.filter(a=>now.includes(a)),...now.filter(a=>!sel.includes(a))];render()}}
 async function init(){for(const n of ['standings','rolling_rd','elo','odds','odds_history','scores']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
  if(!D.standings){$('#msg').textContent='Data files not found. Run the GitHub workflow, then reload.';$('#asof').textContent='';return}
- const ss=Object.keys(D.standings.seasons).sort(),p=new URLSearchParams(location.search);season=ss.includes(p.get('season'))?p.get('season'):ss[ss.length-1];
+ const all=Object.keys(D.standings.seasons).sort(),played=all.filter(k=>D.standings.seasons[k].as_of),ss=played.length?played:all,p=new URLSearchParams(location.search);season=ss.includes(p.get('season'))?p.get('season'):ss[ss.length-1];
  $('#season').innerHTML=ss.map(s=>`<option ${s===season?'selected':''}>${s}</option>`).join('');
  let t=p.get('teams');if(t==null){try{t=localStorage.getItem('pm_teams')||''}catch(e){t=''}}
  const valid=new Set(rows().map(x=>x.abbreviation));sel=t.split(',').filter(a=>valid.has(a));
