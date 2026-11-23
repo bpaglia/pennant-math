@@ -196,6 +196,8 @@ class FetchHelpersTest(unittest.TestCase):
         self.assertEqual((game["home_team_id"], game["away_team_id"]), (19, 14))
         self.assertEqual(game["innings"], 9)
         self.assertNotIn("scoring_summary", game)
+        self.assertEqual(game["home_innings"], [0] * 9)
+        self.assertEqual(game["away_innings"], [0] * 9)
 
     def test_normalize_game_handles_unplayed_game(self):
         raw = raw_game(8, state="scheduled")
@@ -267,6 +269,18 @@ class FetchClientTest(MockServerTestCase):
                         "--base-url", self.base_url, "--min-interval", "0"])
             self.assertEqual((Path(tmp) / "games_2025.json").read_text(), before)
 
+    def test_skip_existing_refetches_files_saved_before_line_scores(self):
+        MockHandler.pages = {("regular", ""): ([raw_game(1)], None), ("postseason", ""): ([], None)}
+        os.environ["BALLDONTLIE_API_KEY"] = "test-key"
+        with tempfile.TemporaryDirectory() as tmp:
+            old_file = Path(tmp) / "games_2025.json"
+            old_file.write_text(json.dumps({"meta": {"season": 2025}, "games": []}))      # no schema marker
+            args = ["--seasons", "2025", "--out", tmp, "--skip-existing", "--base-url", self.base_url, "--min-interval", "0"]
+            self.assertEqual(fetch.main(args), 0)
+            data = json.loads(old_file.read_text())
+            self.assertEqual(data["meta"]["schema"], fetch.SCHEMA_VERSION)
+            self.assertEqual(len(data["games"]), 1)
+
     def test_main_requires_api_key(self):
         os.environ.pop("BALLDONTLIE_API_KEY", None)
         self.assertEqual(fetch.main(["--seasons", "2025"]), 2)
@@ -330,6 +344,15 @@ class ValidateGamesTest(unittest.TestCase):
         games.append(dict(games[0]))
         report = run_validate(make_teams(), games)
         self.assertTrue(any("appears 2 times" in message for message in report.errors))
+
+    def test_inning_scores_that_do_not_add_up_are_a_warning(self):
+        games = complete_season()
+        for g in games:
+            g.update(home_innings=[g["home_runs"]], away_innings=[g["away_runs"]])
+        games[0]["home_innings"] = [games[0]["home_runs"] + 1]
+        report = run_validate(make_teams(), games)
+        self.assertEqual(report.errors, [])
+        self.assertTrue(any("do not add up" in message for message in report.warnings))
 
     def test_tied_final_is_error(self):
         games = [norm_game(1, "2025-04-01", 1, 2, 4, 4)]

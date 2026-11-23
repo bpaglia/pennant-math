@@ -279,6 +279,67 @@ class CategoryTotalsTest(unittest.TestCase):
         self.assertEqual((row["hits_for"], row["errors"]), (0, 0))
 
 
+def line_game(gid, home, away, home_line, away_line, date="2025-06-01"):
+    """A final game built from its inning-by-inning scores."""
+    game = norm_game(gid, date, home, away, sum(x or 0 for x in home_line), sum(x or 0 for x in away_line))
+    game.update(home_innings=home_line, away_innings=away_line, innings=max(len(home_line), len(away_line)))
+    return game
+
+
+class GameFlowTest(unittest.TestCase):
+    def standings(self, games):
+        return compute.compute_standings(games, TEAMS)
+
+    def test_walk_off_comeback_and_blown_lead(self):
+        # Away leads 1-0 after six and 4-2 entering the bottom of the ninth; home scores 3 to win 5-4.
+        game = line_game(1, 1, 2, [0, 0, 0, 0, 0, 0, 2, 0, 3], [1, 0, 0, 0, 0, 0, 3, 0, 0])
+        standings = self.standings([game])
+        home, away = row_for(standings, 1), row_for(standings, 2)
+        self.assertEqual((home["walkoff_wins"], away["walkoff_losses"]), (1, 1))
+        self.assertEqual((home["trailed_after_six"], home["comeback_wins"]), (1, 1))
+        self.assertEqual((away["led_after_six"], away["blown_leads"], away["heartbreak_losses"]), (1, 1, 1))
+        self.assertEqual(home["heartbreak_losses"], 0)
+
+    def test_home_win_without_batting_last_is_not_a_walk_off(self):
+        game = line_game(1, 1, 2, [0, 3, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0])
+        home = row_for(self.standings([game]), 1)
+        self.assertEqual(home["walkoff_wins"], 0)
+        self.assertEqual((home["led_after_six"], home["led_after_six_wins"]), (1, 1))
+
+    def test_walk_off_in_extra_innings(self):
+        game = line_game(1, 1, 2, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(row_for(self.standings([game]), 1)["walkoff_wins"], 1)
+
+    def test_runs_by_inning_and_big_innings(self):
+        game = line_game(1, 1, 2, [3, 0, 1, 0, 0, 0, 0, 0, 0, 2], [0, 1, 0, 0, 4, 0, 0, 0, 0, 0])
+        home, away = row_for(self.standings([game]), 1), row_for(self.standings([game]), 2)
+        self.assertEqual(home["runs_by_inning"], [3, 0, 1, 0, 0, 0, 0, 0, 0, 2])      # the 10th inning lands in the last slot
+        self.assertEqual(home["runs_allowed_by_inning"], [0, 1, 0, 0, 4, 0, 0, 0, 0, 0])
+        self.assertEqual((home["big_innings"], home["scoring_innings"], away["big_innings"]), (1, 3, 1))
+        self.assertEqual(home["innings_batted"], 10)
+
+    def test_unbatted_inning_does_not_count_as_batted(self):
+        game = line_game(1, 1, 2, [3, 0, 0, 0, 0, 0, 0, 0, None], [0, 0, 0, 0, 0, 0, 0, 0, 1])
+        self.assertEqual(row_for(self.standings([game]), 1)["innings_batted"], 8)
+
+    def test_lines_that_do_not_add_up_are_ignored(self):
+        game = line_game(1, 1, 2, [0, 0, 0, 0, 0, 0, 0, 0, 3], [1, 0, 0, 0, 0, 0, 0, 0, 0])
+        game["home_runs"] = 4                      # the lines say 3
+        row = row_for(self.standings([game]), 1)
+        self.assertEqual((row["line_games"], row["wins"]), (0, 1))     # still counted in the standings
+
+    def test_league_game_flow_totals_must_balance(self):
+        standings = self.standings([line_game(1, 1, 2, [0, 0, 0, 0, 0, 0, 2, 0, 3], [1, 0, 0, 0, 0, 0, 3, 0, 0])])
+        compute.check_integrity(2025, standings["teams"])                 # balanced: must not raise
+        standings["teams"][0]["comeback_wins"] += 1
+        with self.assertRaises(compute.ComputeError):
+            compute.check_integrity(2025, standings["teams"])
+
+    def test_games_without_lines_are_counted_in_the_standings_only(self):
+        row = row_for(self.standings([norm_game(1, "2025-06-01", 1, 2, 5, 3)]), 1)
+        self.assertEqual((row["line_games"], row["walkoff_wins"], row["wins"]), (0, 0, 1))
+
+
 class EndToEndTest(unittest.TestCase):
     def test_main_writes_all_outputs(self):
         with tempfile.TemporaryDirectory() as tmp:
