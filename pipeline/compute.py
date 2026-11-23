@@ -82,8 +82,52 @@ def _blank_stats() -> dict:
         "one_run_w": 0, "one_run_l": 0, "extra_w": 0, "extra_l": 0,
         "home_w": 0, "home_l": 0, "road_w": 0, "road_l": 0, "remaining": 0,
         "home_rs": 0, "home_ra": 0, "road_rs": 0, "road_ra": 0,
+        "line_games": 0, "walkoff_w": 0, "walkoff_l": 0, "comeback_w": 0, "trailed6": 0, "led6": 0, "led6_w": 0,
+        "blown": 0, "heartbreak": 0, "big_inn": 0, "score_inn": 0, "bat_inn": 0, "by": [0] * 10, "ag": [0] * 10,
         "hf": 0, "ha": 0, "err": 0, "sho_p": 0, "sho_a": 0, "bw": 0, "bl": 0,
     }
+
+
+def _apply_line(stats: dict, game: dict, home: int, away: int) -> None:
+    """Game-flow facts from a game's inning-by-inning scores. Skips games whose lines do not add up."""
+    raw = {home: game.get("home_innings"), away: game.get("away_innings")}
+    if not all(isinstance(v, list) and v for v in raw.values()):
+        return
+    runs = {home: [x or 0 for x in raw[home]], away: [x or 0 for x in raw[away]]}
+    if sum(runs[home]) != game["home_runs"] or sum(runs[away]) != game["away_runs"]:
+        return
+    home_won = sum(runs[home]) > sum(runs[away])
+    # A walk-off: the home team batted last and took the lead in its final turn.
+    walkoff = (home_won and len(runs[home]) >= len(runs[away])
+               and sum(runs[home]) - runs[home][-1] <= sum(runs[away]))
+    for team, other in ((home, away), (away, home)):
+        row, mine, theirs = stats[team], runs[team], runs[other]
+        won = (team == home) == home_won
+        row["line_games"] += 1
+        row["bat_inn"] += sum(1 for x in raw[team] if x is not None)
+        for i, r in enumerate(mine):
+            row["by"][min(i, 9)] += r
+            row["score_inn"] += r >= 1
+            row["big_inn"] += r >= 3
+        for i, r in enumerate(theirs):
+            row["ag"][min(i, 9)] += r
+        led = False
+        if len(mine) >= 6 and len(theirs) >= 6:
+            ahead, behind = sum(mine[:6]), sum(theirs[:6])
+            if ahead > behind:
+                row["led6"] += 1
+                led = True
+                if won:
+                    row["led6_w"] += 1
+                else:
+                    row["blown"] += 1
+            elif ahead < behind:
+                row["trailed6"] += 1
+                row["comeback_w"] += won
+        if walkoff:
+            row["walkoff_w" if team == home else "walkoff_l"] += 1
+        if not won and ((led) or (walkoff and team != home)):
+            row["heartbreak"] += 1
 
 
 def compute_standings(season_games: list, teams: list) -> dict:
@@ -136,6 +180,7 @@ def compute_standings(season_games: list, teams: list) -> dict:
                 row["one_run_w" if won else "one_run_l"] += 1
             if extra_innings:
                 row["extra_w" if won else "extra_l"] += 1
+        _apply_line(stats, game, home, away)
 
     rows = []
     for team in teams:
@@ -166,6 +211,11 @@ def compute_standings(season_games: list, teams: list) -> dict:
             "road_wins": s["road_w"], "road_losses": s["road_l"],
             "hits_for": s["hf"], "hits_against": s["ha"], "errors": s["err"], "shutouts_pitched": s["sho_p"],
             "shutouts_against": s["sho_a"], "blowout_wins": s["bw"], "blowout_losses": s["bl"],
+            "line_games": s["line_games"], "walkoff_wins": s["walkoff_w"], "walkoff_losses": s["walkoff_l"],
+            "comeback_wins": s["comeback_w"], "trailed_after_six": s["trailed6"], "led_after_six": s["led6"],
+            "led_after_six_wins": s["led6_w"], "blown_leads": s["blown"], "heartbreak_losses": s["heartbreak"],
+            "big_innings": s["big_inn"], "scoring_innings": s["score_inn"], "innings_batted": s["bat_inn"],
+            "runs_by_inning": s["by"], "runs_allowed_by_inning": s["ag"],
             "home_run_diff": s["home_rs"] - s["home_ra"], "road_run_diff": s["road_rs"] - s["road_ra"],
             "one_run_z": round((s["one_run_w"] - close / 2) / math.sqrt(close / 4), 2) if close else None,
             "games_remaining": s["remaining"],
@@ -248,6 +298,11 @@ def check_integrity(season: int, rows: list) -> None:
         raise ComputeError(f"{season}: league wins do not equal league losses")
     if sum(row["runs_scored"] for row in rows) != sum(row["runs_allowed"] for row in rows):
         raise ComputeError(f"{season}: league runs scored do not equal runs allowed")
+    # Every comeback win is some other team's blown lead, and every walk-off win is another team's walk-off loss.
+    if sum(row["comeback_wins"] for row in rows) != sum(row["blown_leads"] for row in rows):
+        raise ComputeError(f"{season}: league comeback wins do not equal blown leads")
+    if sum(row["walkoff_wins"] for row in rows) != sum(row["walkoff_losses"] for row in rows):
+        raise ComputeError(f"{season}: league walk-off wins do not equal walk-off losses")
 
 
 # --------------------------------------------------------------------------

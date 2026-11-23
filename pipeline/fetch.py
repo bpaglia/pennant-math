@@ -42,6 +42,7 @@ MAX_PAGES = 200           # safety valve; a season is about 25 pages
 SEASON_TYPES = ("regular", "postseason")
 EASTERN = ZoneInfo("America/New_York")
 SOURCE_NAME = "balldontlie"
+SCHEMA_VERSION = 2   # 2 = games keep their inning-by-inning scores
 
 
 class ApiError(RuntimeError):
@@ -199,6 +200,8 @@ def normalize_game(game: dict) -> dict:
         "home_errors": home_data.get("errors"),
         "away_errors": away_data.get("errors"),
         "innings": max(inning_counts) or None,
+        "home_innings": home_data.get("inning_scores"),
+        "away_innings": away_data.get("inning_scores"),
     }
 
 
@@ -224,6 +227,14 @@ def write_json_atomic(path: Path, payload) -> None:
     temp_path = path.with_suffix(path.suffix + ".tmp")
     temp_path.write_text(json.dumps(payload, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     os.replace(temp_path, path)
+
+
+def _has_current_schema(path: Path) -> bool:
+    """True if a saved games file already has everything the pipeline now needs."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("meta", {}).get("schema") == SCHEMA_VERSION
+    except (OSError, ValueError):
+        return False
 
 
 def utc_now_iso() -> str:
@@ -277,7 +288,7 @@ def main(argv=None) -> int:
 
         for season in args.seasons:
             path = args.out / f"games_{season}.json"
-            if args.skip_existing and path.exists():
+            if args.skip_existing and path.exists() and _has_current_schema(path):
                 print(f"{season}: skipped (file exists)")
                 continue
             games = fetch_season(client, season)
@@ -286,6 +297,7 @@ def main(argv=None) -> int:
                 {
                     "meta": {
                         "source": SOURCE_NAME,
+                        "schema": SCHEMA_VERSION,
                         "season": season,
                         "fetched_at_utc": utc_now_iso(),
                         "game_count": len(games),

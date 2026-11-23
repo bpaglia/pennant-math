@@ -213,6 +213,15 @@ def check_season(season: int, games: list, team_ids: set, known: list, report: R
                 f"(teams {item.get('teams')}): {item.get('note', '')}"
             )
 
+    with_lines = [g for g in finals if isinstance(g.get("home_innings"), list) and isinstance(g.get("away_innings"), list)]
+    bad = [g["id"] for g in with_lines if sum(x or 0 for x in g["home_innings"]) != g["home_runs"]
+           or sum(x or 0 for x in g["away_innings"]) != g["away_runs"]]
+    if bad:
+        report.warn(f"{season}: {len(bad)} games have inning scores that do not add up to the final score "
+                    f"(for example game ids {bad[:3]}); they are left out of game-flow statistics")
+    if finals and len(with_lines) < len(finals):
+        report.info(f"{season}: {len(finals) - len(with_lines)} of {len(finals)} final games have no inning scores")
+
     if len(finals) >= MIN_GAMES_FOR_AVERAGE_CHECK:
         total_runs = sum(game["home_runs"] + game["away_runs"] for game in finals)
         average = total_runs / (2 * len(finals))
