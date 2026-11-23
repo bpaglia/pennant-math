@@ -44,6 +44,10 @@ Elo starting values are K = 4, home advantage = 24 points, and a one-third pull 
 
 `compute.py` also stops with an error if it finds an impossible total (wins not equal to losses, runs scored not equal to runs allowed), or if a computed record does not match a verified official record listed under `official_records` in `data/known_cancellations.json`.
 
+## Game-flow statistics
+
+`fetch.py` now keeps each game's inning-by-inning scores (`home_innings`, `away_innings`) and marks its files with `schema: 2`. With `--skip-existing`, a season file saved before line scores existed is refetched automatically. `compute.py` uses the lines for comeback wins (won after trailing through six innings), blown leads (lost after leading through six), walk-off wins and losses, heartbreak losses, scoring by inning, scoring innings, and big innings (3+ runs). Games whose lines do not add up to the final score are skipped and flagged by `validate.py`. Two league-wide identities are checked on every run: comeback wins equal blown leads, and walk-off wins equal walk-off losses.
+
 ## Pennant Score (score.py)
 
 `python pipeline/score.py` turns the standings, Elo ratings, and playoff odds into one 0 to 100 grade per team: Results 30% (run differential per game), Underlying 45% (Elo and expected win%), Outlook 25% (playoff odds and remaining schedule). Each part is a percentile among the 30 teams. Outlook exists only in a season in progress; when it is missing the other two are reweighted. Writes `scores.json`. The weights are starting values to tune later.
