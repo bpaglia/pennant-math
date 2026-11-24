@@ -6,9 +6,8 @@
 <title>Strength &amp; luck · Pennant Math</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
- @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
 :root{--ink:#1b2430;--mut:#667085;--line:#e3e7ee;--bg:#f6f8fb;--card:#fff;--navy:#1E3A8A}
-*{box-sizing:border-box}body{margin:0;font:15px/1.45 'Geist',sans-serif;color:var(--ink);background:var(--bg)}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 Geist,system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
 header{background:var(--navy);color:#fff;padding:14px 20px}header h1{margin:0;font-size:22px}header p{margin:2px 0 0;opacity:.8;font-size:13px}
 main{max-width:1100px;margin:0 auto;padding:16px}section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
 h2{margin:0 0 10px;font-size:17px}.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -23,7 +22,7 @@ th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white
 th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}tr.grp td{background:var(--bg);font-weight:600;text-align:left}
 .note{color:var(--mut);font-size:12.5px;margin:8px 0 0}.pos{color:#157347}.neg{color:#b42318}#msg{padding:16px;color:#b42318}#msg:empty{display:none}header a{color:#fff}nav{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;font-size:14px}nav a{opacity:.8;text-decoration:none}nav a.on{opacity:1;font-weight:700;border-bottom:2px solid #fff}
 .best{font-weight:700;color:#157347}.grid{align-items:start}#cmpT{width:auto;min-width:45%}#cmpT td:first-child{padding-right:36px}</style>
-</head>
+<link rel="preload" href="assets/geist.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="assets/fonts.css"></head>
 <body>
 <header><h1><a href="index.html" style="color:#fff;text-decoration:none">Pennant Math</a></h1><p><span id="asof">Loading…</span></p><nav id="nv"><a href="index.html">Home</a><a href="strength.html" class="on">Strength &amp; luck</a><a href="offense.html">Offense</a><a href="pitching.html">Pitching &amp; defense</a><a href="gameflow.html">Game flow</a><a href="closegames.html">Close games</a><a href="methods.html">How it works</a></nav></header>
 <main>
@@ -52,6 +51,7 @@ th{cursor:pointer;color:var(--mut);font-weight:600}tr.sel td{background:#fff7d6}
 <p class="note">Game data from BALLDONTLIE. Pennant Math is an independent fan project and is not affiliated with or endorsed by Major League Baseball or any team.</p>
 </main>
 <script>
+if(window.Chart&&Chart.defaults&&Chart.defaults.font)Chart.defaults.font.family="Geist,system-ui,sans-serif";
 const $=s=>document.querySelector(s),PAL=['#1f77b4','#d62728','#2ca02c','#ff7f0e','#9467bd','#8c564b'],GREY='#b9c0cc';
 const D={},CH={};let sel=[],season,sortKey='win_pct',sortDir=-1;
 const pct=x=>x==null?'–':(x*100).toFixed(0)+'%',r1=x=>Math.round(x*10)/10,f1=x=>x==null?'–':(r1(x)>0?'+':'')+(r1(x)===0?'0.0':r1(x).toFixed(1)),io=p=>p==null?'–':p>=.9995?'In':p<=.0005?'Out':pct(p),col=a=>PAL[sel.indexOf(a)%PAL.length];
@@ -113,7 +113,7 @@ function odds(){const has=D.odds&&D.odds.meta.season==season;$('#oddsA').hidden=
 function picker(){const g={};rows().forEach(t=>(g[`${t.league==='American'?'AL':'NL'} ${t.division}`]??=[]).push(t));
  $('#pick').innerHTML=Object.keys(g).sort().map(k=>`<h4>${k}</h4>`+g[k].map(t=>`<label><input type="checkbox" value="${t.abbreviation}" ${sel.includes(t.abbreviation)?'checked':''}> ${t.name}</label>`).join('')).join('');
  $('#pick').onchange=e=>{const now=[...document.querySelectorAll('#pick input:checked')].map(i=>i.value);sel=[...sel.filter(a=>now.includes(a)),...now.filter(a=>!sel.includes(a))];render()}}
-async function init(){for(const n of ['standings','rolling_rd','elo','odds','odds_history','scores']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
+async function init(){try{await document.fonts.load('14px Geist')}catch(e){}for(const n of ['standings','rolling_rd','elo','odds','odds_history','scores']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
  if(!D.standings){$('#msg').textContent='Data files not found. Run the GitHub workflow, then reload.';$('#asof').textContent='';return}
  const all=Object.keys(D.standings.seasons).sort(),played=all.filter(k=>D.standings.seasons[k].as_of),ss=played.length?played:all,p=new URLSearchParams(location.search);season=ss.includes(p.get('season'))?p.get('season'):ss[ss.length-1];
  $('#season').innerHTML=ss.map(s=>`<option ${s===season?'selected':''}>${s}</option>`).join('');
