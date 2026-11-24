@@ -59,7 +59,7 @@ function cat(){const c=CATS[pg],a=D.standings.seasons[season];$('#asof').textCon
   const R=[...rows().filter(t=>t.games)].sort((x,y)=>(v(x)-v(y))*dir);
   $('#tbl').innerHTML=`<tr><th data-i="-1">Team</th>${C.map((x,i)=>`<th data-i="${i}">${x[0]}${i===sk?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+R.map(t=>`<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td>${C.map(x=>`<td>${x[4]?x[4](t):num(x[1](t),x[2])}</td>`).join('')}</tr>`).join('');
   document.querySelectorAll('#tbl th').forEach(h=>h.onclick=()=>{const i=+h.dataset.i;if(i<0){sk=-1;dir=c.best===-1?1:-1;draw();return}dir=i===sk?-dir:(C[i][3]===-1?1:-1);sk=i;draw()})};draw()}
-async function boot(){for(const n of ['standings','scores','odds','recap']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
+async function boot(){if(window.Chart&&Chart.defaults&&Chart.defaults.font)Chart.defaults.font.family="Geist,system-ui,sans-serif";try{await document.fonts.load('14px Geist')}catch(e){}for(const n of ['standings','scores','odds','recap']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
  if(!D.standings){$('#msg').textContent='Data files not found. Run the GitHub workflow, then reload.';return}
  let t=P.get('teams');if(t==null){try{t=localStorage.getItem('pm_teams')||''}catch(e){t=''}}
  const sp=seasonPick(),valid=new Set(Object.values(D.standings.seasons).flatMap(s=>s.teams.map(x=>x.abbreviation)));sel=t.split(',').filter(a=>valid.has(a));
