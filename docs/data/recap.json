@@ -1,0 +1,252 @@
+{
+ "games": [
+  {
+   "away": {
+    "abbr": "MIL",
+    "id": 16,
+    "name": "Milwaukee Brewers"
+   },
+   "away_innings": [
+    0,
+    1,
+    0,
+    0,
+    1,
+    2,
+    0,
+    0,
+    0
+   ],
+   "away_runs": 4,
+   "home": {
+    "abbr": "TB",
+    "id": 27,
+    "name": "Tampa Bay Rays"
+   },
+   "home_innings": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "home_runs": 1,
+   "id": 15467436,
+   "innings": 9,
+   "p_winner": 0.552,
+   "season_type": "postseason",
+   "tags": [
+    "postseason"
+   ],
+   "winner": "away"
+  }
+ ],
+ "meta": {
+  "date": "2026-10-28",
+  "generated_at_utc": "2026-11-24T02:34:29Z",
+  "n_sims": 4000,
+  "previous_date": "2026-10-27",
+  "season": 2026,
+  "season_complete": true
+ },
+ "movers": {
+  "down": [],
+  "up": []
+ },
+ "odds": {
+  "1": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "10": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "11": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 1.0,
+   "div_before": 1.0
+  },
+  "12": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "13": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "14": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 1.0,
+   "div_before": 1.0
+  },
+  "15": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "16": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 1.0,
+   "div_before": 1.0
+  },
+  "17": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "18": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "19": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "2": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 1.0,
+   "div_before": 1.0
+  },
+  "20": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "21": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "22": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "23": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "24": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "25": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "26": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "27": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 1.0,
+   "div_before": 1.0
+  },
+  "28": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "29": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "3": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "30": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "4": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "5": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "6": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "7": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  },
+  "8": {
+   "after": 1.0,
+   "before": 1.0,
+   "div_after": 1.0,
+   "div_before": 1.0
+  },
+  "9": {
+   "after": 0.0,
+   "before": 0.0,
+   "div_after": 0.0,
+   "div_before": 0.0
+  }
+ },
+ "summary": {
+  "biggest_upset": null,
+  "blowouts": 0,
+  "comebacks": 0,
+  "extras": 0,
+  "games": 1,
+  "one_run": 0,
+  "upsets": 0,
+  "walkoffs": 0
+ }
+}
