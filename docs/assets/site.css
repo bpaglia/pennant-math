@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
 :root{--ink:#1b2430;--mut:#667085;--line:#e3e7ee;--bg:#f6f8fb;--card:#fff;--navy:#1E3A8A}
-*{box-sizing:border-box}body{margin:0;font:15px/1.5 'Geist',sans-serif;color:var(--ink);background:var(--bg)}a{color:var(--navy)}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;color:var(--ink);background:var(--bg)}a{color:var(--navy)}
 header{background:var(--navy);color:#fff;padding:12px 20px}header h1{margin:0;font-size:22px}header a{color:#fff;text-decoration:none}
 nav{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;font-size:14px}nav a{opacity:.8}nav a.on{opacity:1;font-weight:700;border-bottom:2px solid #fff}
 main{max-width:1100px;margin:0 auto;padding:16px}section,.mod{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
@@ -13,3 +12,6 @@ select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6
 details{position:relative}details[open] .pick{display:grid}.pick{display:none;position:absolute;z-index:5;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 14px;width:min(640px,90vw);max-height:60vh;overflow:auto;box-shadow:0 8px 24px #0002;text-align:left}
 .pick h4{grid-column:1/-1;margin:8px 0 2px;font-size:12px;color:var(--mut)}.pick label{font-size:13px;white-space:nowrap}summary,button{font:inherit;padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid var(--line);border-left:5px solid;border-radius:8px;padding:6px 10px;font-size:13.5px}
+.stripx{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px}.sc{white-space:nowrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13.5px}.sc .w,.up{color:#157347}.dn{color:#b42318}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}.key{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}.key b{display:block;font-size:22px}.key span{color:var(--mut);font-size:12.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.two{grid-template-columns:1fr}}.tag{font-size:11.5px;background:#eef1f6;border-radius:10px;padding:1px 7px;margin-right:4px;white-space:nowrap}
