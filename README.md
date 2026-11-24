@@ -44,6 +44,10 @@ Elo starting values are K = 4, home advantage = 24 points, and a one-third pull 
 
 `compute.py` also stops with an error if it finds an impossible total (wins not equal to losses, runs scored not equal to runs allowed), or if a computed record does not match a verified official record listed under `official_records` in `data/known_cancellations.json`.
 
+## Daily recap (recap.py)
+
+`python pipeline/recap.py [--date YYYY-MM-DD]` writes `recap.json` for the latest game day (or any past day): every game with its score, inning line, tags (walk-off, comeback, upset, extra innings, one-run, blowout, shutout, postseason), and the winner's pre-game chance from the previous day's Elo ratings (an upset is a win by a team that had under a 40% chance). It simulates the playoff race as of the day before and as of that day, so the home page can show who gained and lost the most. Run by the workflow after the playoff odds. Needs numpy.
+
 ## Game-flow statistics
 
 `fetch.py` now keeps each game's inning-by-inning scores (`home_innings`, `away_innings`) and marks its files with `schema: 2`. With `--skip-existing`, a season file saved before line scores existed is refetched automatically. `compute.py` uses the lines for comeback wins (won after trailing through six innings), blown leads (lost after leading through six), walk-off wins and losses, heartbreak losses, scoring by inning, scoring innings, and big innings (3+ runs). Games whose lines do not add up to the final score are skipped and flagged by `validate.py`. Two league-wide identities are checked on every run: comeback wins equal blown leads, and walk-off wins equal walk-off losses.
