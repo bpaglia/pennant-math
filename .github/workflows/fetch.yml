@@ -150,6 +150,14 @@ jobs:
         run: |
           python pipeline/score.py | tee data/score_report.txt
 
+      - name: Daily recap
+        id: recap
+        if: steps.compute.outcome == 'success'
+        shell: bash
+        continue-on-error: true
+        run: |
+          python pipeline/recap.py | tee data/recap_report.txt
+
       - name: Show odds results on the run page
         if: steps.compute.outcome == 'success'
         shell: bash
@@ -181,7 +189,7 @@ jobs:
           cp data/processed/*.json docs/data/
 
       - name: Save data to the repository
-        if: steps.validate.outcome == 'success' && steps.compute.outcome == 'success' && steps.odds.outcome == 'success' && steps.score.outcome == 'success' && steps.backtest.outcome != 'failure' && steps.tuning.outcome != 'failure'
+        if: steps.validate.outcome == 'success' && steps.compute.outcome == 'success' && steps.odds.outcome == 'success' && steps.score.outcome == 'success' && steps.recap.outcome == 'success' && steps.backtest.outcome != 'failure' && steps.tuning.outcome != 'failure'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -195,7 +203,7 @@ jobs:
           fi
 
       - name: Keep the files from a failed run for inspection
-        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.score.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure'
+        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.score.outcome == 'failure' || steps.recap.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: failed-run-data
@@ -203,7 +211,7 @@ jobs:
           retention-days: 7
 
       - name: Fail the run if validation or computing found problems
-        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure' || steps.score.outcome == 'failure'
+        if: steps.validate.outcome == 'failure' || steps.compute.outcome == 'failure' || steps.odds.outcome == 'failure' || steps.backtest.outcome == 'failure' || steps.tuning.outcome == 'failure' || steps.score.outcome == 'failure' || steps.recap.outcome == 'failure'
         shell: bash
         run: |
           echo "Validation or computing found problems. Nothing was published and the site still shows the last good data. The files from this run are attached to the run page as failed-run-data for 7 days."
