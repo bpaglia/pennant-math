@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pennant Math</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script><link rel="stylesheet" href="assets/site.css"></head>
-<body data-page="home"><header id="hd"><h1>Pennant Math</h1></header><main><section class="hero"><h2>Look past the standings</h2><p>Which teams are really good, which are lucky, and where each part of the game stands. Start with the headline in each area, then dig into the full numbers.</p>
-<div class="bar" style="justify-content:center"><span id="sp"></span><details><summary id="pickSum">Pick your teams</summary><div class="pick" id="pick"></div></details><button id="clear">Clear</button><span id="asof" class="note"></span></div><p class="note">Pick the teams you follow and they stay highlighted on every page.</p></section>
-<section id="mine" hidden></section><div id="msg" class="warn" style="display:none"></div>
-<div class="mods" id="mods"></div>
+<body data-page="home"><header id="hd"><h1>Pennant Math</h1></header><main>
+<div id="scoreRow"><div class="stripx" id="scores"></div></div>
+<div class="bar"><span id="sp"></span><details><summary id="pickSum">Pick your teams</summary><div class="pick" id="pick"></div></details><button id="clear">Clear</button><span id="asof" class="note"></span></div>
+<div id="msg" class="warn" style="display:none"></div>
+<section id="mine" hidden></section>
+<div class="keys" id="keys"></div>
+<section id="gamesT"></section>
+<section id="means"></section>
+<div class="mods" id="lists"></div>
+<section><h2>Go deeper</h2><p id="deeper"></p></section>
+<div id="digest"></div>
 <p class="note">Game data from BALLDONTLIE. Pennant Math is an independent fan project and is not affiliated with or endorsed by Major League Baseball or any team.</p></main>
 <script src="assets/site.js"></script></body></html>
