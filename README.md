@@ -48,6 +48,10 @@ Elo starting values are K = 4, home advantage = 24 points, and a one-third pull 
 
 `python pipeline/recap.py [--date YYYY-MM-DD]` writes `recap.json` for the latest game day (or any past day): every game with its score, inning line, tags (walk-off, comeback, upset, extra innings, one-run, blowout, shutout, postseason), and the winner's pre-game chance from the previous day's Elo ratings (an upset is a win by a team that had under a 40% chance). It simulates the playoff race as of the day before and as of that day, so the home page can show who gained and lost the most. Run by the workflow after the playoff odds. Needs numpy.
 
+## Scoreboard archive (archive.py)
+
+`python pipeline/archive.py [--seasons 2026] [--rebuild]` writes `archive_<season>.json`: every game day of a season with each game's score, inning count, the winner's pre-game chance, and tags, plus every team's playoff and division odds after that day (3,000 simulations per day, stored in thousandths). Days already saved are skipped, so the daily run only adds the newest day; the daily workflow runs the current season only. To build all seasons once, start the workflow with **build_archive** ticked (about 15 minutes). The `archive.html` page lets visitors step through days or pick a date, and shows the same sections as the home page for that day. Odds changes there are measured from the previous game day.
+
 ## Game-flow statistics
 
 `fetch.py` now keeps each game's inning-by-inning scores (`home_innings`, `away_innings`) and marks its files with `schema: 2`. With `--skip-existing`, a season file saved before line scores existed is refetched automatically. `compute.py` uses the lines for comeback wins (won after trailing through six innings), blown leads (lost after leading through six), walk-off wins and losses, heartbreak losses, scoring by inning, scoring innings, and big innings (3+ runs). Games whose lines do not add up to the final score are skipped and flagged by `validate.py`. Two league-wide identities are checked on every run: comeback wins equal blown leads, and walk-off wins equal walk-off losses.
