@@ -20,10 +20,8 @@ close:{page:'closegames.html',title:'Close games',blurb:'How teams fare when gam
 const rows=()=>D.standings.seasons[season].teams,qs=()=>{const p=new URLSearchParams();if(sel.length)p.set('teams',sel.join(','));p.set('season',season);return '?'+p},
  num=(v,d)=>v==null||isNaN(v)?'–':v.toFixed(d),col=a=>PAL[sel.indexOf(a)%PAL.length];
 function ranked(c,k=c.f){return rows().filter(t=>t.games&&k(t)!=null).sort((a,b)=>(k(b)-k(a))*(c.best===-1?-1:1))}
-function bars(id,c,list){CH[id]&&CH[id].destroy();CH[id]=new Chart($('#'+id),{type:'bar',data:{labels:list.map(t=>t.abbreviation),datasets:[{data:list.map(t=>+c.f(t).toFixed(c.d+1)),backgroundColor:list.map(t=>sel.includes(t.abbreviation)?col(t.abbreviation):GREY)}]},
- options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:c.unit}}}}})}
 function head(){document.title=(pg==='home'?'':((CATS[pg]||{}).title||'Scoreboard')+' · ')+'Pennant Math';const N=[['index.html','Home','home']].concat(Object.entries(CATS).map(([k,c])=>[c.page,c.title.split(' ')[0]==='Team'?'Strength & luck':c.title,k]),[['archive.html','Scoreboard','archive'],['methods.html','How it works','x']]);
- $('#hd').innerHTML=`<h1>Pennant Math</h1><nav>${N.map(([h,l,k])=>`<a href="${h}${qs()}" class="${k===pg?'on':''}">${l}</a>`).join('')}</nav>`}
+ $('#hd').innerHTML=`<h1 class="logo"><a href="index.html${qs()}"><img src="assets/logo-header.png" alt="Pennant Math"></a></h1><nav>${N.map(([h,l,k])=>`<a href="${h}${qs()}" class="${k===pg?'on':''}">${l}</a>`).join('')}</nav>`}
 function seasonPick(){const all=Object.keys(D.standings.seasons).sort(),ok=all.filter(k=>D.standings.seasons[k].as_of),ss=ok.length?ok:all;season=ss.includes(P.get('season'))?P.get('season'):ss[ss.length-1];
  return {ss,html:`<label>Season <select id="sn">${ss.map(s=>`<option ${s===season?'selected':''}>${s}</option>`).join('')}</select></label>`}}
 function setSel(a){sel=a;try{localStorage.setItem('pm_teams',sel.join(','))}catch(e){}history.replaceState(null,'','?'+qs().slice(1));head();if(pg==='home'){picker();strip();home()}}
@@ -33,10 +31,11 @@ function picker(){const box=$('#pick');if(!box)return;const g={};rows().forEach(
 const TAG={walkoff:'Walk-off',comeback:'Comeback',upset:'Upset',extras:'Extra innings',one_run:'One-run',blowout:'Blowout',shutout:'Shutout',postseason:'Postseason'},
  pc=x=>(x*100).toFixed(0)+'%',io=p=>p==null?'–':p>=.9995?'In':p<=.0005?'Out':pc(p),dl=(x,y)=>{const d=Math.round((y-x)*100);return d===0?'no change':(d>0?'▲ +':'▼ ')+d+' pts'},
  tags=g=>g.tags.map(x=>`<span class="tag">${TAG[x]}</span>`).join('');
-function strip(){const m=sel.map(a=>rows().find(t=>t.abbreviation===a)).filter(Boolean),R=D.recap;$('#mine').hidden=!m.length;$('#pickSum').textContent=sel.length?sel.join(', '):'Pick your teams';
+const st=o=>o.after>=.9995?(o.div_after>=.9995?'Division winner':'Wild card'):o.after<=.0005?'Out':`Div ${pc(o.div_after||0)} · WC ${pc(Math.max(0,o.after-(o.div_after||0)))}`;let RR=null;
+function strip(){const m=sel.map(a=>rows().find(t=>t.abbreviation===a)).filter(Boolean),R=RR;$('#mine').hidden=!m.length;$('#pickSum').textContent=sel.length?sel.join(', '):'Pick your teams';
  $('#mine').innerHTML=m.length?`<h2>Your teams</h2><div class="chips">${m.map(t=>{const g=R&&R.games.find(x=>x.home.id==t.team_id||x.away.id==t.team_id),o=R&&R.odds[t.team_id];let line='No game on '+(R?R.meta.date:'that day');
  if(g){const h=g.home.id==t.team_id,me=h?g.home_runs:g.away_runs,th=h?g.away_runs:g.home_runs;line=`${me>th?'W':'L'} ${me}-${th} ${h?'vs':'@'} ${h?g.away.abbr:g.home.abbr} ${tags(g)}`}
- const live=o&&o.after>.0005&&o.after<.9995;return `<div class="chip" style="border-color:${col(t.abbreviation)}"><b>${t.name}</b> ${rec(t.wins,t.losses)}<br>${line}<br>Playoffs ${o?io(o.after)+(live?' ('+dl(o.before,o.after)+')':''):'–'} · Pennant Score ${num((sc(t)||{}).score,0)}</div>`}).join('')}</div>`:''}
+ const live=o&&o.after>.0005&&o.after<.9995;return `<div class="chip" style="border-color:${col(t.abbreviation)}"><b>${t.name}</b> ${rec(t.wins,t.losses)}<br>${line}<br>Playoffs ${o?st(o)+(live?' ('+dl(o.before,o.after)+')':''):'–'} · Pennant Score ${num((sc(t)||{}).score,0)}</div>`}).join('')}</div>`:''}
 function digest(R,heading,note){const S=R.summary;
  $('#scores').innerHTML=R.games.map(g=>`<span class="sc"><b class="${g.winner==='away'?'w':''}">${g.away.abbr} ${g.away_runs}</b> @ <b class="${g.winner==='home'?'w':''}">${g.home.abbr} ${g.home_runs}</b></span>`).join('')||'<span class="note">No games.</span>';
  const key=(n,l)=>`<div class="key"><b>${n}</b><span>${l}</span></div>`,up=R.movers.up[0],pl=(n,w)=>n===1?w:w+'s';
@@ -44,39 +43,44 @@ function digest(R,heading,note){const S=R.summary;
  const bu=S.biggest_upset;$('#gamesT').innerHTML=`<h2>${heading}</h2>${bu?`<p>Biggest upset: <b>${bu.winner}</b> beat <b>${bu.loser}</b>, a ${pc(bu.p_winner)} shot beforehand.</p>`:''}
  <div class="scroll"><table><tr><th>Game</th><th>Tags</th><th>Winner's chance beforehand</th></tr>${R.games.map(g=>`<tr class="${sel.includes(g.home.abbr)||sel.includes(g.away.abbr)?'sel':''}"><td>${g.away.abbr} ${g.away_runs}, ${g.home.abbr} ${g.home_runs}</td><td>${tags(g)}</td><td>${pc(g.p_winner)}</td></tr>`).join('')}</table></div>`;
  const mv=(l,m)=>`<h3>${l}</h3>${m.length?`<ul>${m.map(x=>`<li><b>${x.abbr}</b> ${io(x.before)} → ${io(x.after)} <span class="${x.after>x.before?'up':'dn'}">${dl(x.before,x.after)}</span></li>`).join('')}</ul>`:'<p class="note">None.</p>'}`;
- const pic=l=>rows().filter(t=>t.league===l&&R.odds[t.team_id]).sort((x,y)=>R.odds[y.team_id].after-R.odds[x.team_id].after).slice(0,8).map(t=>{const o=R.odds[t.team_id];return `<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td><td>${rec(t.wins,t.losses)}</td><td>${io(o.after)}</td><td>${o.after>.0005&&o.after<.9995?dl(o.before,o.after):''}</td></tr>`}).join('');
+ const pic=l=>rows().filter(t=>t.league===l&&R.odds[t.team_id]).sort((x,y)=>(R.odds[y.team_id].after-R.odds[x.team_id].after)||(R.odds[y.team_id].div_after-R.odds[x.team_id].div_after)).slice(0,8).map(t=>{const o=R.odds[t.team_id];return `<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td><td>${rec(t.wins,t.losses)}</td><td>${st(o)}</td><td>${o.after>.0005&&o.after<.9995?dl(o.before,o.after):''}</td></tr>`}).join('');
  $('#means').innerHTML=`<h2>What it means for the season</h2><div class="two"><div>${mv('Gained the most playoff odds',R.movers.up)}${mv('Lost the most',R.movers.down)}</div><div><h3>Playoff picture</h3>${['American','National'].map(l=>`<p class="note">${l} League</p><table>${pic(l)}</table>`).join('')}</div></div><p class="note">${note}</p>`}
-function home(){const R=D.recap,a=D.standings.seasons[season];$('#asof').textContent=`Season ${season} · through ${a.as_of||'n/a'}${a.complete?' (final)':''}`;
+function home(){const R=RR,a=D.standings.seasons[season];$('#asof').textContent=`Season ${season} · through ${a.as_of||'n/a'}${a.complete?' (final)':''}`;
  const R2=rows().filter(t=>t.games),best=R2.filter(t=>sc(t)&&sc(t).score!=null).sort((x,y)=>sc(y).score-sc(x).score).slice(0,5),byLuck=[...R2].sort((x,y)=>y.luck-x.luck);
  $('#lists').innerHTML=`<article class="mod"><h3>Who is really the best?</h3><ol>${best.map(t=>`<li>${t.name} <b>${num(sc(t).score,0)}</b></li>`).join('')}</ol><a class="cta" href="strength.html${qs()}">Team strength and luck →</a></article>
  <article class="mod"><h3>Who is getting lucky?</h3><p class="note">Wins above or below what runs scored and allowed say.</p><ol>${byLuck.slice(0,3).map(t=>`<li>${t.name} <b class="up">${num(t.luck,1)}</b></li>`).join('')}</ol><ol>${byLuck.slice(-3).reverse().map(t=>`<li>${t.name} <b class="dn">${num(t.luck,1)}</b></li>`).join('')}</ol></article>`;
  $('#deeper').innerHTML=Object.values(CATS).map(c=>`<a class="btn" href="${c.page}${qs()}">${c.title.split(' ')[0]==='Team'?'Strength & luck':c.title} →</a>`).join(' ')+` <a class="btn" href="archive.html${qs()}">Scoreboard archive →</a>`;
  if(!R){$('#digest').innerHTML='<p class="note">The daily recap appears after the next workflow run.</p>';$('#scoreRow').hidden=true;return}
- const days=Math.round((new Date()-new Date(R.meta.date+'T12:00:00'))/864e5),when=new Date(R.meta.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+ const days=Math.round((new Date()-new Date(R.meta.date+'T12:00:00'))/864e5),when=new Date(R.meta.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
  digest(R,`${days<=1?'Yesterday':'Last game day'}: ${when}`,R.meta.season_complete?'The regular season is over: odds show who made the field.':'Odds come from simulating the rest of the season 4,000 times with each team\'s Elo rating, before and after that day\'s games.')}
-async function archive(){const A=await fetch(`data/archive_${season}.json`).then(r=>r.ok?r.json():null).catch(()=>null);
+function fromArchive(A,cur){const days=Object.keys(A.days).sort(),i=days.indexOf(cur),d0=A.days[cur],prev=i>0?A.days[days[i-1]].po:A.meta.pre,T=id=>rows().find(t=>t.team_id==id)||{abbreviation:'?',name:'?'},ref=id=>({id,abbr:T(id).abbreviation,name:T(id).name});
+ const games=d0.g.map(([a,h,ar,hr,inn,pw,tg])=>({away:ref(a),home:ref(h),away_runs:ar,home_runs:hr,innings:inn,winner:hr>ar?'home':'away',p_winner:pw/1000,tags:tg})),cnt=t=>games.filter(g=>g.tags.includes(t)).length,odds={},ch=[];
+ A.meta.ids.forEach((id,k)=>{const b=prev[k]/1000,a=d0.po[k]/1000;odds[id]={before:b,after:a,div_after:d0.dv[k]/1000};ch.push([a-b,id])});ch.sort((x,y)=>y[0]-x[0]);
+ const mover=id=>({...ref(id),before:odds[id].before,after:odds[id].after}),u=games.filter(g=>g.tags.includes('upset')).sort((x,y)=>x.p_winner-y.p_winner)[0];
+ return{meta:{date:cur,season_complete:d0.po.every(x=>x===0||x===1000)},summary:{games:games.length,upsets:cnt('upset'),walkoffs:cnt('walkoff'),comebacks:cnt('comeback'),extras:cnt('extras'),one_run:cnt('one_run'),biggest_upset:u?{winner:u[u.winner].abbr,loser:u[u.winner==='home'?'away':'home'].abbr,p_winner:u.p_winner}:null},games,odds,
+  movers:{up:ch.filter(c=>c[0]>=.005).slice(0,5).map(c=>mover(c[1])),down:ch.filter(c=>c[0]<=-.005).slice(-5).reverse().map(c=>mover(c[1]))}}}
+const loadArchive=()=>fetch(`data/archive_${season}.json`).then(r=>r.ok?r.json():null).catch(()=>null);
+async function getRecap(){if(D.recap&&D.recap.meta.season==season)return D.recap;const A=await loadArchive();if(!A)return null;const days=Object.keys(A.days).sort();return fromArchive(A,days[days.length-1])}
+async function archive(){const A=await loadArchive();
  if(!A){$('#digest').innerHTML='<p class="note">The archive for this season is not built yet. Run the workflow with build_archive ticked.</p>';return}
- const days=Object.keys(A.days).sort(),ids=A.meta.ids,T=id=>rows().find(t=>t.team_id==id)||{abbreviation:'?',name:'?'},ref=id=>({id,abbr:T(id).abbreviation,name:T(id).name}),inp=$('#day');
- inp.min=days[0];inp.max=days[days.length-1];let cur=days.includes(P.get('date'))?P.get('date'):days[days.length-1];$('#asof').textContent=`Season ${season} archive · ${days.length} game days`;
- function show(){const i=days.indexOf(cur),d0=A.days[cur],prev=i>0?A.days[days[i-1]].po:A.meta.pre;inp.value=cur;$('#prev').disabled=i===0;$('#next').disabled=i===days.length-1;
-  history.replaceState(null,'','?'+new URLSearchParams({...(sel.length?{teams:sel.join(',')}:{}),season,date:cur}));
-  const games=d0.g.map(([a,h,ar,hr,inn,pw,tg])=>({away:ref(a),home:ref(h),away_runs:ar,home_runs:hr,innings:inn,winner:hr>ar?'home':'away',p_winner:pw/1000,tags:tg})),cnt=t=>games.filter(g=>g.tags.includes(t)).length,odds={},ch=[];
-  ids.forEach((id,k)=>{const b=prev[k]/1000,a=d0.po[k]/1000;odds[id]={before:b,after:a};ch.push([a-b,id])});ch.sort((x,y)=>y[0]-x[0]);
-  const mover=id=>({...ref(id),before:odds[id].before,after:odds[id].after}),u=games.filter(g=>g.tags.includes('upset')).sort((x,y)=>x.p_winner-y.p_winner)[0];
-  digest({summary:{games:games.length,upsets:cnt('upset'),walkoffs:cnt('walkoff'),comebacks:cnt('comeback'),extras:cnt('extras'),one_run:cnt('one_run'),biggest_upset:u?{winner:u[u.winner].abbr,loser:u[u.winner==='home'?'away':'home'].abbr,p_winner:u.p_winner}:null},games,odds,
-   movers:{up:ch.filter(c=>c[0]>=.005).slice(0,5).map(c=>mover(c[1])),down:ch.filter(c=>c[0]<=-.005).slice(-5).reverse().map(c=>mover(c[1]))}},new Date(cur+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}),'Odds changes are measured from the previous game day. Archive odds use 3,000 simulations, so changes of a point or two are mostly noise.')}
+ const days=Object.keys(A.days).sort(),inp=$('#day');inp.min=days[0];inp.max=days[days.length-1];let cur=days.includes(P.get('date'))?P.get('date'):days[days.length-1];$('#asof').textContent=`Season ${season} archive · ${days.length} game days`;
+ function show(){const i=days.indexOf(cur);inp.value=cur;$('#prev').disabled=i===0;$('#next').disabled=i===days.length-1;history.replaceState(null,'','?'+new URLSearchParams({...(sel.length?{teams:sel.join(',')}:{}),season,date:cur}));
+  digest(fromArchive(A,cur),new Date(cur+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}),'Odds changes are measured from the previous game day. Archive odds use 3,000 simulations, so changes of a point or two are mostly noise.')}
  $('#prev').onclick=()=>{cur=days[days.indexOf(cur)-1];show()};$('#next').onclick=()=>{cur=days[days.indexOf(cur)+1];show()};
  inp.onchange=()=>{const f=days.filter(x=>x<=inp.value);cur=f.length?f[f.length-1]:days[0];show()};show()}
 function cat(){const c=CATS[pg],a=D.standings.seasons[season];$('#asof').textContent=`Season ${season} · through ${a.as_of||'n/a'}${a.complete?' (final)':''}`;
- $('#ttl').textContent=c.title;$('#blurb').textContent=c.blurb;$('#note').textContent=c.note;$('#cn').textContent=c.unit;let sk=-1,dir=c.best===-1?1:-1;
- const draw=()=>{const L=ranked(c);bars('chart',c,L);const C=c.cols,v=t=>(sk<0?c.f(t):C[sk][1](t))??-1e9;
+ $('#ttl').textContent=c.title;$('#blurb').textContent=c.blurb;$('#note').textContent=c.note+' Shading compares each column across the 30 teams: green is better, red is worse, and blue marks counts where neither is better.';let sk=-1,dir=c.best===-1?1:-1;
+ const draw=()=>{const C=c.cols,v=t=>(sk<0?c.f(t):C[sk][1](t))??-1e9;
   const R=[...rows().filter(t=>t.games)].sort((x,y)=>(v(x)-v(y))*dir);
-  $('#tbl').innerHTML=`<tr><th data-i="-1">Team</th>${C.map((x,i)=>`<th data-i="${i}">${x[0]}${i===sk?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+R.map(t=>`<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td>${C.map(x=>`<td>${x[4]?x[4](t):num(x[1](t),x[2])}</td>`).join('')}</tr>`).join('');
+  const Z=C.map(x=>{const q=R.map(t=>x[1](t)).filter(n=>n!=null);return q.length?[Math.min(...q),Math.max(...q)]:[0,0]}),
+   shade=(x,i,t)=>{const n=x[1](t),[lo,hi]=Z[i];if(n==null||hi===lo)return '';let k=(n-lo)/(hi-lo);if(x[3]===0)return `background:rgba(31,119,180,${(k*.32).toFixed(2)})`;if(x[3]===-1)k=1-k;
+    return k>=.5?`background:rgba(21,115,71,${((k-.5)*.7).toFixed(2)})`:`background:rgba(180,35,24,${((.5-k)*.7).toFixed(2)})`};
+  $('#tbl').innerHTML=`<tr><th data-i="-1">Team</th>${C.map((x,i)=>`<th data-i="${i}">${x[0]}${i===sk?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+R.map(t=>`<tr class="${sel.includes(t.abbreviation)?'sel':''}"><td>${t.name}</td>${C.map((x,i)=>`<td style="${shade(x,i,t)}">${x[4]?x[4](t):num(x[1](t),x[2])}</td>`).join('')}</tr>`).join('');
   document.querySelectorAll('#tbl th').forEach(h=>h.onclick=()=>{const i=+h.dataset.i;if(i<0){sk=-1;dir=c.best===-1?1:-1;draw();return}dir=i===sk?-dir:(C[i][3]===-1?1:-1);sk=i;draw()})};draw()}
 async function boot(){if(window.Chart&&Chart.defaults&&Chart.defaults.font)Chart.defaults.font.family="Geist,system-ui,sans-serif";try{await document.fonts.load('14px Geist')}catch(e){}for(const n of ['standings','scores','odds','recap']){try{const r=await fetch(`data/${n}.json`);D[n]=r.ok?await r.json():null}catch(e){D[n]=null}}
  if(!D.standings){$('#msg').textContent='Data files not found. Run the GitHub workflow, then reload.';return}
  let t=P.get('teams');if(t==null){try{t=localStorage.getItem('pm_teams')||''}catch(e){t=''}}
  const sp=seasonPick(),valid=new Set(Object.values(D.standings.seasons).flatMap(s=>s.teams.map(x=>x.abbreviation)));sel=t.split(',').filter(a=>valid.has(a));
  $('#sp').innerHTML=sp.html;$('#sn').onchange=e=>{location.search='?'+new URLSearchParams({...(sel.length?{teams:sel.join(',')}:{}),season:e.target.value})};
- head();pg==='home'?(picker(),strip(),home()):pg==='archive'?archive():cat();if($('#picked'))$('#picked').textContent=sel.length?`Highlighting: ${sel.join(', ')}. Change your teams on the Strength & luck page.`:'No teams picked yet: choose some on the Strength & luck page and they will be highlighted here.'}
+ head();pg==='home'?(RR=await getRecap(),picker(),strip(),home()):pg==='archive'?archive():cat();if($('#picked'))$('#picked').textContent=sel.length?`Highlighting: ${sel.join(', ')}. Change your teams on the Strength & luck page.`:'No teams picked yet: choose some on the Strength & luck page and they will be highlighted here.'}
 boot()})();
